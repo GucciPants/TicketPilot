@@ -10,6 +10,7 @@ from typing import Optional
 from app.models import Ticket, TicketStatus
 from app.database import get_db
 from app.rag.document_processor import DocumentProcessor
+from app.metrics import ticket_created_counter, metrics_endpoint
 
 router = APIRouter()
 
@@ -40,6 +41,9 @@ async def create_ticket(ticket_data: TicketCreate, db: Session = Depends(get_db)
     db.commit()
     db.refresh(ticket)
     
+    # Increment metrics
+    ticket_created_counter.inc()
+    
     # Publish to Redis for worker processing
     ticket_payload = {
         "ticket_id": ticket.id,
@@ -61,6 +65,12 @@ async def get_ticket(ticket_id: int, db: Session = Depends(get_db)):
 async def health_check():
     """Health check endpoint."""
     return {"status": "ok"}
+
+
+@router.get("/metrics")
+async def metrics():
+    """Prometheus metrics endpoint."""
+    return metrics_endpoint()
 
 # Document ingestion endpoints
 class DocumentIngest(BaseModel):

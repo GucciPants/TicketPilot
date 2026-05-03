@@ -8,6 +8,7 @@ from app.models import Ticket, TicketStatus
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage
 from app.rag.vector_store import VectorStore
+from app.metrics import worker_processed_counter, token_usage_counter, ticket_processing_seconds
 
 # Redis connection
 redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://redis:6379/0"))
@@ -31,6 +32,7 @@ vector_store = VectorStore()
 
 def process_ticket(ticket_id: int, description: str) -> str:
     """Process a ticket using LLM with RAG and return resolution."""
+    start_time = time.time()  # Start timing
     try:
         # Retrieve relevant documents from RAG
         relevant_docs = vector_store.search(description, limit=3)
@@ -50,18 +52,26 @@ Ticket description: {description}
 Analyze the ticket and provide a helpful resolution or response. 
 If you cannot resolve it, suggest escalation to human support.
 Keep the response concise and professional."""
-
+        
         response = llm.invoke([HumanMessage(content=prompt)])
         
         # Log token usage (for cost tracking)
         if hasattr(response, 'usage_metadata'):
             tokens = response.usage_metadata
             print(f"Ticket {ticket_id} - Tokens used: {tokens}")
+            # Increment token counter
+            token_usage_counter.labels(model="google/gemini-flash-1.5").inc(
+                tokens.get('input_tokens', 0) + tokens.get('output_tokens', 0)
+            )
         
         return response.content
     except Exception as e:
         print(f"Error processing ticket {ticket_id}: {e}")
         return f"Error: Unable to process ticket - {str(e)}"
+    finally:
+        # Record processing time
+        processing_time = time.time() - start_time
+        ticket_processing_seconds.observe(processing_time)
 
 def update_ticket_status(ticket_id: int, resolution: str):
     """Update ticket in database with resolution."""
@@ -82,7 +92,7 @@ def update_ticket_status(ticket_id: int, resolution: str):
 def main():
     """Main worker loop."""
     print("TicketPilot Worker started. Listening for tickets...")
-    
+
     while True:
         try:
             # Blocking pop from Redis queue
@@ -92,15 +102,18 @@ def main():
                 ticket_data = json.loads(data)
                 ticket_id = ticket_data.get("ticket_id")
                 description = ticket_data.get("description")
-                
+
                 print(f"Processing ticket {ticket_id}...")
-                
+
                 # Process ticket
                 resolution = process_ticket(ticket_id, description)
                 
                 # Update database
                 update_ticket_status(ticket_id, resolution)
                 
+                # Increment worker processed counter
+                worker_processed_counter.inc()
+
         except Exception as e:
             print(f"Worker error: {e}")
             time.sleep(5)
