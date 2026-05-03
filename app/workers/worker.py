@@ -10,19 +10,26 @@ from langchain.schema import HumanMessage
 from app.rag.vector_store import VectorStore
 from app.metrics import worker_processed_counter, token_usage_counter, ticket_processing_seconds
 
-# Redis connection
+# Redis connections
 redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://redis:6379/0"))
+redis_cache = redis.from_url(os.getenv("REDIS_URL", "redis://redis:6379/1"))  # Use DB 1 for cache
 
 # Database connection
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://ticketpilot:ticketpilot@db:5432/ticketpilot")
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
-# LLM setup (using OpenRouter)
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-llm = ChatOpenAI(
-    model="google/gemini-flash-1.5",  # Default model, can be changed
-    openai_api_key=OPENROUTER_API_KEY,
+# LLM models - cheap for triage, powerful for complex
+triage_llm = ChatOpenAI(
+    model="google/gemini-flash-1.5",  # Cheap and fast
+    openai_api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url="https://openrouter.ai/api/v1",
+    temperature=0.3
+)
+
+power_llm = ChatOpenAI(
+    model="anthropic/claude-sonnet-4",  # Powerful for complex
+    openai_api_key=os.getenv("OPENROUTER_API_KEY"),
     base_url="https://openrouter.ai/api/v1",
     temperature=0.7
 )
@@ -30,10 +37,39 @@ llm = ChatOpenAI(
 # Initialize RAG components
 vector_store = VectorStore()
 
+def get_cache_key(query: str) -> str:
+    """Generate cache key from query."""
+    return f"llm_cache:{hashlib.md5(query.encode()).hexdigest()}"
+
+def get_cached_response(cache_key: str) -> str | None:
+    """Get cached LLM response."""
+    cached = redis_cache.get(cache_key)
+    if cached:
+        print(f"Cache hit for key: {cache_key}")
+        return cached.decode('utf-8')
+    return None
+
+def cache_response(cache_key: str, response: str, ttl: int = 3600):
+    """Cache LLM response with TTL."""
+    redis_cache.setex(cache_key, ttl, response)
+
+def is_simple_ticket(description: str) -> bool:
+    """Determine if ticket is simple enough for cheap model."""
+    simple_keywords = ['login', 'password', 'reset', 'billing', 'payment', 'slow', 'error']
+    desc_lower = description.lower()
+    return any(keyword in desc_lower for keyword in simple_keywords)
+
 def process_ticket(ticket_id: int, description: str) -> str:
     """Process a ticket using LLM with RAG and return resolution."""
-    start_time = time.time()  # Start timing
+    start_time = time.time()
     try:
+        # Check cache first
+        cache_key = get_cache_key(description)
+        cached = get_cached_response(cache_key)
+        if cached:
+            print(f"Ticket {ticket_id} - Using cached response")
+            return cached
+        
         # Retrieve relevant documents from RAG
         relevant_docs = vector_store.search(description, limit=3)
         
@@ -43,6 +79,11 @@ def process_ticket(ticket_id: int, description: str) -> str:
             context = "\n\nRelevant knowledge base entries:\n"
             for doc in relevant_docs:
                 context += f"- {doc['text'][:200]}...\n"
+        
+        # Choose model based on ticket complexity
+        use_cheap_model = is_simple_ticket(description)
+        llm = triage_llm if use_cheap_model else power_llm
+        model_name = "gemini-flash-1.5" if use_cheap_model else "claude-sonnet-4"
         
         prompt = f"""You are a support ticket resolution agent. 
         
@@ -58,13 +99,20 @@ Keep the response concise and professional."""
         # Log token usage (for cost tracking)
         if hasattr(response, 'usage_metadata'):
             tokens = response.usage_metadata
-            print(f"Ticket {ticket_id} - Tokens used: {tokens}")
+            input_tokens = tokens.get('input_tokens', 0)
+            output_tokens = tokens.get('output_tokens', 0)
+            total_tokens = input_tokens + output_tokens
+            print(f"Ticket {ticket_id} - Model: {model_name}, Tokens: {total_tokens}")
+            
             # Increment token counter
-            token_usage_counter.labels(model="google/gemini-flash-1.5").inc(
-                tokens.get('input_tokens', 0) + tokens.get('output_tokens', 0)
-            )
+            token_usage_counter.labels(model=model_name).inc(total_tokens)
         
-        return response.content
+        resolution = response.content
+        
+        # Cache the response
+        cache_response(cache_key, resolution)
+        
+        return resolution
     except Exception as e:
         print(f"Error processing ticket {ticket_id}: {e}")
         return f"Error: Unable to process ticket - {str(e)}"
