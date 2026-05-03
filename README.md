@@ -80,22 +80,141 @@ ticketpilot/
 
 ## Getting Started
 
-1. Clone the repository
-2. Copy `.env.example` to `.env` and set your OpenRouter API key
-3. Run `docker-compose up -d`
-4. Access the API at `http://localhost:8000`
-5. Access n8n at `http://localhost:5678`
+### Prerequisites
+- Docker & Docker Compose
+- Git
+- Python 3.11+ (for local development)
+- OpenRouter API key (get it from openrouter.ai)
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/GucciPants/TicketPilot.git
+   cd TicketPilot
+   ```
+
+2. Create `.env` file from example:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Edit `.env` and add your OpenRouter API key:
+   ```
+   OPENROUTER_API_KEY=sk-or-v1-your_key_here
+   ```
+
+4. Start all services with Docker Compose:
+   ```bash
+   docker-compose up -d
+   ```
+   This will start:
+   - **PostgreSQL** (port 5432)
+   - **Redis** (ports 6379)
+   - **Qdrant** (port 6333)
+   - **FastAPI** (port 8000)
+   - **Worker** (background process)
+   - **Prometheus** (port 9090)
+
+5. Wait for services to start, then ingest sample knowledge base:
+   ```bash
+   curl -X POST http://localhost:8000/api/v1/knowledge-base/ingest
+   ```
+
+### Usage
+
+#### Create a support ticket:
+```bash
+curl -X POST http://localhost:8000/api/v1/tickets \
+  -H "Content-Type: application/json" \
+  -d '{"description": "I cannot log in to my account"}'
+```
+
+Response will include ticket ID. Worker will process it automatically.
+
+#### Check ticket status:
+```bash
+curl http://localhost:8000/api/v1/tickets/{ticket_id}
+```
+
+#### Search knowledge base:
+```bash
+curl "http://localhost:8000/api/v1/documents/search?query=login+issue&limit=3"
+```
+
+#### View Prometheus metrics:
+```bash
+curl http://localhost:8000/api/v1/metrics
+```
+
+Or visit Prometheus dashboard at http://localhost:9090.
+
+### Testing the System
+
+1. Ingest knowledge base (if not done yet):
+   ```bash
+   curl -X POST http://localhost:8000/api/v1/knowledge-base/ingest
+   ```
+
+2. Create a test ticket:
+   ```bash
+   curl -X POST http://localhost:8000/api/v1/tickets \
+     -H "Content-Type: application/json" \
+     -d '{"description": "My billing information is incorrect"}'
+   ```
+
+3. Poll for ticket resolution (worker processes asynchronously):
+   ```bash
+   # Wait a few seconds, then check
+   curl http://localhost:8000/api/v1/tickets/1
+   ```
+
+4. Monitor metrics at http://localhost:8000/api/v1/metrics
+
+### Project Structure
+
+```
+ticketpilot/
+├── app/
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── routes.py          # FastAPI endpoints
+│   ├── agents/              # (reserved for future agents)
+│   ├── rag/
+│   │   ├── __init__.py
+│   │   ├── vector_store.py   # Qdrant integration
+│   │   ├── embedding.py      # Sentence-transformers embeddings
+│   │   └── document_processor.py  # Text chunking & ingestion
+│   ├── services/             # (reserved for services)
+│   ├── workers/
+│   │   ├── __init__.py
+│   │   └── worker.py        # Ticket processing worker
+│   ├── models.py           # SQLAlchemy models
+│   ├── database.py         # Database session
+│   ├── metrics.py          # Prometheus metrics
+│   └── main.py            # FastAPI app initialization
+├── n8n/                   # (n8n workflows - skipped per user request)
+├── docker-compose.yml
+├── Dockerfile.api
+├── Dockerfile.worker
+├── requirements.txt
+├── .env.example
+├── .gitignore
+└── README.md
+```
 
 ## Roadmap
 
 - [x] Project setup
-- [ ] REST API for ticket ingestion
-- [ ] Redis event publishing
-- [ ] n8n workflow for ticket routing
-- [ ] RAG pipeline with Qdrant
-- [ ] AI agent for ticket resolution
-- [ ] Prometheus metrics
-- [ ] Cost optimization (caching, model selection)
+- [x] PostgreSQL persistence (SQLAlchemy)
+- [x] Core API endpoints (tickets, documents, metrics)
+- [x] Redis event publishing
+- [x] LangChain worker with OpenRouter
+- [x] RAG pipeline (Qdrant, embeddings, document processing)
+- [x] Prometheus metrics (token usage, latency, ticket counts)
+- [x] Cost optimization (Redis caching, model selection)
+- [ ] n8n workflow - SKIPPED per user request
+- [ ] Unit tests
 - [ ] Frontend dashboard (optional)
 
 ## License

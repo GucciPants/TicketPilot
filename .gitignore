@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Environment variables
+.env
+.env.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Model files and data
+*.pkl
+*.joblib
+*.h5
+*.pb
+*.onnx
+data/
+models/
+*.parquet
+*.csv
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Docker
+.docker/
+
+# Redis persistence
+dump.rdb
+appendonly.aof
+
+# Qdrant data (if stored locally, but we use Docker)
+# qdrant_data/
+
+# Prometheus data (Docker volume handles it)
+# prometheus_data/
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
