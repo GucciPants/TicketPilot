@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from app.models import Ticket, TicketStatus
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage
+from app.rag.vector_store import VectorStore
 
 # Redis connection
 redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://redis:6379/0"))
@@ -25,18 +26,38 @@ llm = ChatOpenAI(
     temperature=0.7
 )
 
+# Initialize RAG components
+vector_store = VectorStore()
+
 def process_ticket(ticket_id: int, description: str) -> str:
-    """Process a ticket using LLM and return resolution."""
+    """Process a ticket using LLM with RAG and return resolution."""
     try:
+        # Retrieve relevant documents from RAG
+        relevant_docs = vector_store.search(description, limit=3)
+        
+        # Build context from retrieved documents
+        context = ""
+        if relevant_docs:
+            context = "\n\nRelevant knowledge base entries:\n"
+            for doc in relevant_docs:
+                context += f"- {doc['text'][:200]}...\n"
+        
         prompt = f"""You are a support ticket resolution agent. 
         
 Ticket description: {description}
+{context}
 
 Analyze the ticket and provide a helpful resolution or response. 
 If you cannot resolve it, suggest escalation to human support.
 Keep the response concise and professional."""
 
         response = llm.invoke([HumanMessage(content=prompt)])
+        
+        # Log token usage (for cost tracking)
+        if hasattr(response, 'usage_metadata'):
+            tokens = response.usage_metadata
+            print(f"Ticket {ticket_id} - Tokens used: {tokens}")
+        
         return response.content
     except Exception as e:
         print(f"Error processing ticket {ticket_id}: {e}")

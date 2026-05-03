@@ -5,9 +5,11 @@ from datetime import datetime
 import redis
 import json
 import os
+from typing import Optional
 
 from app.models import Ticket, TicketStatus
 from app.database import get_db
+from app.rag.document_processor import DocumentProcessor
 
 router = APIRouter()
 
@@ -59,3 +61,32 @@ async def get_ticket(ticket_id: int, db: Session = Depends(get_db)):
 async def health_check():
     """Health check endpoint."""
     return {"status": "ok"}
+
+# Document ingestion endpoints
+class DocumentIngest(BaseModel):
+    text: str
+    doc_id: Optional[str] = None
+    metadata: Optional[dict] = None
+
+@router.post("/documents")
+async def ingest_document(doc: DocumentIngest):
+    """Ingest a document into the RAG knowledge base."""
+    processor = DocumentProcessor()
+    doc_id = doc.doc_id or f"manual_{datetime.now().timestamp()}"
+    chunks = processor.process_text(doc.text, doc_id, doc.metadata)
+    return {"status": "success", "doc_id": doc_id, "chunks": chunks}
+
+@router.post("/knowledge-base/ingest")
+async def ingest_knowledge_base():
+    """Ingest the sample knowledge base."""
+    processor = DocumentProcessor()
+    count = processor.ingest_sample_knowledge_base()
+    return {"status": "success", "documents_ingested": count}
+
+@router.get("/documents/search")
+async def search_documents(query: str, limit: int = 3):
+    """Search for relevant documents."""
+    from app.rag.vector_store import VectorStore
+    store = VectorStore()
+    results = store.search(query, limit)
+    return {"query": query, "results": results}
