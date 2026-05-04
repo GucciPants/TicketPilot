@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketPilot - AI Support Ticket System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎫 TicketPilot</h1>
+            <p class="subtitle">AI-Powered Support Ticket Resolution</p>
+        </header>
+
+        <div class="grid">
+            <!-- Create Ticket -->
+            <section class="card">
+                <h2>Create Support Ticket</h2>
+                <form id="ticketForm">
+                    <textarea id="ticketDesc" placeholder="Describe your issue..." rows="4" required></textarea>
+                    <button type="submit">Submit Ticket</button>
+                </form>
+                <div id="ticketResult" class="result"></div>
+            </section>
+
+            <!-- Knowledge Base -->
+            <section class="card">
+                <h2>Knowledge Base</h2>
+                <button id="ingestBtn" class="btn-secondary">Ingest Sample Knowledge Base</button>
+                <div id="ingestResult" class="result"></div>
+                
+                <h3>Search Knowledge Base</h3>
+                <form id="searchForm">
+                    <input type="text" id="searchQuery" placeholder="Search..." required>
+                    <button type="submit">Search</button>
+                </form>
+                <div id="searchResult" class="result"></div>
+            </section>
+
+            <!-- Check Ticket Status -->
+            <section class="card">
+                <h2>Check Ticket Status</h2>
+                <form id="statusForm">
+                    <input type="number" id="ticketId" placeholder="Ticket ID" required>
+                    <button type="submit">Check Status</button>
+                </form>
+                <div id="statusResult" class="result"></div>
+            </section>
+
+            <!-- Metrics -->
+            <section class="card">
+                <h2>Monitoring</h2>
+                <a href="http://localhost:8000/api/v1/metrics" target="_blank" class="btn-link">View Prometheus Metrics</a>
+                <a href="http://localhost:9090" target="_blank" class="btn-link">Prometheus Dashboard</a>
+            </section>
+        </div>
+
+        <!-- Ticket History -->
+        <section class="card full-width">
+            <h2>Recent Tickets</h2>
+            <div id="ticketHistory"></div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
