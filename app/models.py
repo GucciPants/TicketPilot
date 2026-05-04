@@ -1,9 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Enum
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
+from app.database import Base
 import enum
-
-Base = declarative_base()
 
 class TicketStatus(str, enum.Enum):
     OPEN = "open"

@@ -2,6 +2,7 @@ import redis
 import json
 import os
 import time
+import hashlib
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.models import Ticket, TicketStatus
