@@ -5,7 +5,7 @@ import time
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.models import Ticket, TicketStatus
-from langchain_openai import ChatOpenAI
+from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage
 from app.rag.vector_store import VectorStore
 from app.metrics import worker_processed_counter, token_usage_counter, ticket_processing_seconds
