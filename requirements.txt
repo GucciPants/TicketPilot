@@ -10,7 +10,7 @@ httpx==0.25.1
 sentence-transformers==2.2.2
 langchain==0.0.340
 langchain-community==0.0.1
-langchain-core==0.0.70
+langchain-core==0.0.13
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
 pydantic-settings==2.1.0
