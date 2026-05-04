@@ -19,23 +19,12 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://ticketpilot:ticketpilot@d
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
-# LLM models - cheap for triage, powerful for complex
-triage_llm = ChatOpenAI(
-    model="google/gemini-flash-1.5",  # Cheap and fast
-    openai_api_key=os.getenv("OPENROUTER_API_KEY"),
-    base_url="https://openrouter.ai/api/v1",
-    temperature=0.3
-)
-
-power_llm = ChatOpenAI(
-    model="anthropic/claude-sonnet-4",  # Powerful for complex
-    openai_api_key=os.getenv("OPENROUTER_API_KEY"),
-    base_url="https://openrouter.ai/api/v1",
-    temperature=0.7
-)
-
-# Initialize RAG components
+# RAG components
 vector_store = VectorStore()
+
+# Model names from environment variables (loaded in process_ticket)
+# TRIAGE_MODEL=google/gemini-flash-1.5
+# POWER_MODEL=anthropic/claude-sonnet-4
 
 def get_cache_key(query: str) -> str:
     """Generate cache key from query."""
@@ -62,6 +51,15 @@ def is_simple_ticket(description: str) -> bool:
 def process_ticket(ticket_id: int, description: str) -> str:
     """Process a ticket using LLM with RAG and return resolution."""
     start_time = time.time()
+    
+    # Load models from environment variables (lazy loading)
+    openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    if not openrouter_key:
+        return "Error: OPENROUTER_API_KEY not set in .env file."
+    
+    triage_model_name = os.getenv("TRIAGE_MODEL", "google/gemini-flash-1.5")
+    power_model_name = os.getenv("POWER_MODEL", "anthropic/claude-sonnet-4")
+    
     try:
         # Check cache first
         cache_key = get_cache_key(description)
@@ -82,8 +80,15 @@ def process_ticket(ticket_id: int, description: str) -> str:
         
         # Choose model based on ticket complexity
         use_cheap_model = is_simple_ticket(description)
-        llm = triage_llm if use_cheap_model else power_llm
-        model_name = "gemini-flash-1.5" if use_cheap_model else "claude-sonnet-4"
+        selected_model = triage_model_name if use_cheap_model else power_model_name
+        
+        # Initialize LLM for this request
+        llm = ChatOpenAI(
+            model=selected_model,
+            openai_api_key=openrouter_key,
+            base_url="https://openrouter.ai/api/v1",
+            temperature=0.3 if use_cheap_model else 0.7
+        )
         
         prompt = f"""You are a support ticket resolution agent. 
         
@@ -102,10 +107,10 @@ Keep the response concise and professional."""
             input_tokens = tokens.get('input_tokens', 0)
             output_tokens = tokens.get('output_tokens', 0)
             total_tokens = input_tokens + output_tokens
-            print(f"Ticket {ticket_id} - Model: {model_name}, Tokens: {total_tokens}")
+            print(f"Ticket {ticket_id} - Model: {selected_model}, Tokens: {total_tokens}")
             
             # Increment token counter
-            token_usage_counter.labels(model=model_name).inc(total_tokens)
+            token_usage_counter.labels(model=selected_model).inc(total_tokens)
         
         resolution = response.content
         
