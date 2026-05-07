@@ -94,30 +94,40 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Load ticket history
+    // Load ticket history (auto-refreshes every 5 seconds)
+    let firstLoad = true;
     async function loadTicketHistory() {
         const div = document.getElementById('ticketHistory');
-        div.innerHTML = 'Loading tickets...';
+        if (firstLoad) {
+            div.innerHTML = 'Loading tickets...';
+        }
         try {
             const response = await fetch(`${API_BASE}/tickets`);
             const data = await response.json();
             let html = '';
             if (data.tickets && data.tickets.length > 0) {
                 data.tickets.forEach(t => {
+                    const hasResolution = t.status === 'resolved' || t.status === 'escalated';
                     html += `<div class="ticket-item">
                         <h4>Ticket #${t.id} - <span class="ticket-status status-${t.status}">${t.status}</span></h4>
                         <p>${t.description}</p>
-                        ${t.resolution ? `<p><strong>Resolution:</strong> ${t.resolution}</p>` : '<p><em>Processing...</em></p>'}
+                        ${hasResolution 
+                            ? `<p><strong>Resolution:</strong> ${t.resolution}</p>` 
+                            : '<p><em>⏳ Processing...</em></p>'}
                     </div>`;
                 });
             } else {
                 html = '<p>No tickets yet. Create one above!</p>';
             }
             div.innerHTML = html;
+            firstLoad = false;
         } catch (error) {
-            div.innerHTML = `<p style="color:red">Error loading tickets: ${error.message}</p>`;
+            if (firstLoad) {
+                div.innerHTML = `<p style="color:red">Error loading tickets: ${error.message}</p>`;
+            }
         }
     }
 
     loadTicketHistory();
+    setInterval(loadTicketHistory, 5000); // Auto-refresh every 5s
 });
