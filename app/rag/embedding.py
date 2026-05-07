@@ -16,7 +16,8 @@ def get_embedding(text: str):
         }
         payload = {
             "model": "openai/text-embedding-3-small",
-            "input": text
+            "input": text,
+            "dimensions": 384
         }
         response = requests.post(
             "https://openrouter.ai/api/v1/embeddings",

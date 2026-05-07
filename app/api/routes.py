@@ -61,6 +61,12 @@ async def get_ticket(ticket_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Ticket not found")
     return ticket.to_dict()
 
+@router.get("/tickets")
+async def list_tickets(db: Session = Depends(get_db)):
+    """List all tickets."""
+    tickets = db.query(Ticket).order_by(Ticket.created_at.desc()).all()
+    return {"tickets": [ticket.to_dict() for ticket in tickets]}
+
 @router.get("/health")
 async def health_check():
     """Health check endpoint."""
