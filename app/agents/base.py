@@ -1,8 +1,7 @@
 """Base agent class for the TicketPilot multi-agent system."""
+import os
 from langchain.chat_models import ChatOpenAI
 from app.metrics import token_usage_counter
-import os
-import time
 
 class BaseAgent:
     """Abstract base class for all agents in the pipeline."""
@@ -17,11 +16,11 @@ class BaseAgent:
         """Lazy-initialized LLM instance with timeout."""
         if self._llm is None:
             self._llm = ChatOpenAI(
-                model='google/gemini-2.0-flash-001',
+                model=self.model_name,
                 openai_api_key=os.getenv("OPENROUTER_API_KEY"),
                 base_url="https://openrouter.ai/api/v1",
                 temperature=self.temperature,
-                request_timeout=20  # 15 second timeout
+                request_timeout=20
             )
         return self._llm
 

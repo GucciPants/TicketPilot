@@ -1,6 +1,7 @@
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams, PointStruct
 import os
+import hashlib
 from app.rag.embedding import get_embedding
 
 class VectorStore:
@@ -30,7 +31,7 @@ class VectorStore:
         try:
             embedding = get_embedding(text)
             point = PointStruct(
-                id=hash(doc_id) % (2**31),
+                id=abs(hashlib.md5(doc_id.encode()) % (2**31)),
                 vector=embedding,
                 payload={
                     "doc_id": doc_id,

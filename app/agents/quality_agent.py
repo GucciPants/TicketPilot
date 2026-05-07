@@ -55,9 +55,9 @@ Consider:
         except Exception as e:
             print(f"[QualityAgent] Error: {e}")
             state["quality_check"] = {
-                "passed": True,  # Default: pass if check fails
+                "passed": False,  # Fail closed: escalate on uncertainty
                 "confidence": 0.5,
-                "reason": f"Quality check error (defaulting to pass): {e}"
+                "reason": f"Quality check error (defaulting to escalate): {e}"
             }
         
         return state

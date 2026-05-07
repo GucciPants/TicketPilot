@@ -4,7 +4,7 @@ from app.agents.router_agent import RouterAgent
 from app.agents.context_agent import ContextAgent
 from app.agents.resolver_agent import ResolverAgent
 from app.agents.quality_agent import QualityAgent
-from app.metrics import ticket_processing_seconds, worker_processed_counter
+from app.metrics import ticket_processing_seconds, worker_processed_counter, ticket_resolved_counter, ticket_escalated_counter
 from app.models import Ticket, TicketStatus
 from app.database import SessionLocal
 import time
@@ -53,7 +53,11 @@ class Orchestrator:
             
             # Step 2: Retrieve context from knowledge base
             logger.info(f"[{ticket_id}] Context Agent: retrieving documents...")
-            state = self.context.run(state)
+            if state.get("requires_rag", True):
+                state = self.context.run(state)
+            else:
+                state["context_docs"] = []
+                logger.info(f"[{ticket_id}] Skipping RAG (Router marked not required)")
             
             # Step 3: Generate resolution
             logger.info(f"[{ticket_id}] Resolver Agent: generating response...")
@@ -66,9 +70,11 @@ class Orchestrator:
             # Final decision
             if state.get("quality_check") and state["quality_check"].get("passed"):
                 state["status"] = "resolved"
+                ticket_resolved_counter.inc()
                 logger.info(f"[{ticket_id}] Resolution passed quality check")
             else:
                 state["status"] = "escalated"
+                ticket_escalated_counter.inc()
                 reason = state.get("quality_check", {}).get("reason", "Quality check failed")
                 logger.info(f"[{ticket_id}] Escalated: {reason}")
             
