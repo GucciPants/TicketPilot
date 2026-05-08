@@ -3,68 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TicketPilot - AI Support Ticket System</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <title>TicketPilot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+    <style>[x-cloak] { display: none !important; }</style>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>🎫 TicketPilot</h1>
-            <p class="subtitle">AI-Powered Support Ticket Resolution</p>
-        </header>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+<div x-data="app()" x-cloak class="min-h-screen flex">
+    
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-slate-200 p-5 hidden lg:flex flex-col">
+        <div class="flex items-center gap-3 mb-8">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">TP</div>
+            <div>
+                <h1 class="font-bold text-lg">TicketPilot</h1>
+                <p class="text-xs text-slate-400">AI Support System</p>
+            </div>
+        </div>
+        <nav class="flex flex-col gap-1 flex-1">
+            <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-blue-50 text-blue-700 font-medium">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Dashboard
+            </a>
+            <a href="/admin" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                Admin
+            </a>
+        </nav>
+        <div class="flex items-center gap-2 px-3 py-2 text-xs text-slate-400 border-t border-slate-100 pt-4">
+            <span class="w-2 h-2 rounded-full" :class="sseConnected ? 'bg-green-500' : 'bg-red-400'"></span>
+            <span x-text="sseConnected ? 'Live' : 'Polling'"></span>
+        </div>
+    </aside>
 
-        <div class="grid">
-            <!-- Create Ticket -->
-            <section class="card">
-                <h2>Create Support Ticket</h2>
-                <form id="ticketForm">
-                    <textarea id="ticketDesc" placeholder="Describe your issue..." rows="4" required></textarea>
-                    <button type="submit">Submit Ticket</button>
-                </form>
-                <div id="ticketResult" class="result"></div>
-            </section>
-
-            <!-- Knowledge Base -->
-            <section class="card">
-                <h2>Knowledge Base</h2>
-                <button id="ingestBtn" class="btn-secondary">Ingest Sample Knowledge Base</button>
-                <div id="ingestResult" class="result"></div>
-                
-                <h3>Search Knowledge Base</h3>
-                <form id="searchForm">
-                    <input type="text" id="searchQuery" placeholder="Search..." required>
-                    <button type="submit">Search</button>
-                </form>
-                <div id="searchResult" class="result"></div>
-            </section>
-
-            <!-- Check Ticket Status -->
-            <section class="card">
-                <h2>Check Ticket Status</h2>
-                <form id="statusForm">
-                    <input type="number" id="ticketId" placeholder="Ticket ID" required>
-                    <button type="submit">Check Status</button>
-                </form>
-                <div id="statusResult" class="result"></div>
-            </section>
-
-            <!-- Metrics -->
-            <section class="card">
-                <h2>Monitoring</h2>
-                <a href="/api/v1/metrics" target="_blank" class="btn-link">View Prometheus Metrics</a>
-                <a href="http://localhost:9090" target="_blank" class="btn-link">Prometheus Dashboard</a>
-            </section>
+    <!-- Main -->
+    <main class="flex-1 p-4 lg:p-8 max-w-6xl mx-auto w-full">
+        
+        <!-- Mobile header -->
+        <div class="flex items-center justify-between lg:hidden mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-sm">TP</div>
+                <h1 class="font-bold">TicketPilot</h1>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full" :class="sseConnected ? 'bg-green-500' : 'bg-red-400'"></span>
+                <span class="text-xs text-slate-400" x-text="sseConnected ? 'Live' : 'Polling'"></span>
+                <a href="/admin" class="text-blue-600 text-sm font-medium ml-2">Admin →</a>
+            </div>
         </div>
 
-        <!-- Ticket History -->
-        <section class="card full-width">
-            <h2>Recent Tickets</h2>
-            <div id="ticketHistory"></div>
-        </section>
-    </div>
+        <!-- Stat cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white rounded-xl border border-slate-200 p-5">
+                <p class="text-sm text-slate-500 font-medium">Total Tickets</p>
+                <p class="text-3xl font-bold mt-1" x-text="stats.total">0</p>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 p-5">
+                <p class="text-sm text-slate-500 font-medium">Resolved</p>
+                <p class="text-3xl font-bold mt-1 text-emerald-600" x-text="stats.resolved">0</p>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 p-5">
+                <p class="text-sm text-slate-500 font-medium">Escalated</p>
+                <p class="text-3xl font-bold mt-1 text-red-500" x-text="stats.escalated">0</p>
+            </div>
+        </div>
 
-    <script src="/static/app.js"></script>
+        <!-- Create ticket -->
+        <div class="bg-white rounded-xl border border-slate-200 p-5 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-semibold text-lg">Create Ticket</h2>
+                <button @click="showForm = !showForm" class="text-sm text-blue-600 hover:text-blue-700 font-medium" x-text="showForm ? 'Collapse' : 'Expand'">Expand</button>
+            </div>
+            <form x-show="showForm" @submit.prevent="createTicket" class="space-y-4">
+                <textarea x-model="newTicketDesc" rows="3" placeholder="Describe the issue..." class="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none" required></textarea>
+                <div class="flex items-center gap-3">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition" :disabled="sending">
+                        <span x-show="!sending">Submit Ticket</span>
+                        <span x-show="sending">Submitting...</span>
+                    </button>
+                    <span x-show="lastCreated" class="text-sm text-emerald-600" x-text="'✅ Ticket #' + lastCreated + ' created'"></span>
+                </div>
+            </form>
+        </div>
+
+        <!-- Knowledge base + Search row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+            <div class="bg-white rounded-xl border border-slate-200 p-5">
+                <h3 class="font-semibold mb-3">Knowledge Base</h3>
+                <button @click="ingestKB" class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition" :disabled="ingesting">
+                    <span x-show="!ingesting">📥 Ingest Sample KB</span>
+                    <span x-show="ingesting">Ingesting...</span>
+                </button>
+                <p x-show="kbResult" class="text-sm text-emerald-600 mt-2" x-text="kbResult"></p>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 p-5">
+                <h3 class="font-semibold mb-3">Search KB</h3>
+                <div class="flex gap-2">
+                    <input x-model="searchQuery" @keydown.enter="searchKB" type="text" placeholder="Search..." class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <button @click="searchKB" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Search</button>
+                </div>
+                <div x-show="searchResults.length" class="mt-3 space-y-2">
+                    <template x-for="doc in searchResults" :key="doc.doc_id">
+                        <div class="text-sm bg-slate-50 rounded-lg p-3 border border-slate-100">
+                            <p class="font-medium text-xs text-slate-500" x-text="doc.doc_id"></p>
+                            <p class="mt-1" x-text="doc.text.substring(0, 150) + '...'"></p>
+                            <p class="text-xs text-slate-400 mt-1">Score: <span x-text="(doc.score ?? 0).toFixed(3)"></span></p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tickets -->
+        <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-semibold text-lg">Recent Tickets</h2>
+                <span class="text-xs text-slate-400" x-text="'Auto-refreshing via ' + (sseConnected ? 'SSE' : 'polling')"></span>
+            </div>
+            <div x-show="!tickets.length" class="text-center py-10 text-slate-400 text-sm">No tickets yet. Create one above!</div>
+            <div class="space-y-3">
+                <template x-for="t in tickets" :key="t.id">
+                    <div class="border border-slate-100 rounded-lg p-4 hover:border-slate-200 transition">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs font-mono text-slate-400">#<span x-text="t.id"></span></span>
+                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                          :class="statusClass(t.status)" x-text="t.status"></span>
+                                    <span x-show="t.resolved_by" class="text-xs text-slate-400" x-text="'by ' + t.resolved_by"></span>
+                                </div>
+                                <p class="text-sm font-medium truncate" x-text="t.description"></p>
+                                <div x-show="['resolved','escalated'].includes(t.status) && t.resolution" 
+                                     class="mt-2 text-sm resolution-content" x-html="renderMD(t.resolution)"></div>
+                                <p x-show="t.status === 'open'" class="text-xs text-slate-400 mt-2">⏳ Processing...</p>
+                                <p class="text-xs text-slate-400 mt-2" x-text="'Created: ' + t.created_at"></p>
+                            </div>
+                            <button x-show="t.status === 'escalated'" @click="openAdmin(t.id)" class="shrink-0 text-xs bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg font-medium transition">Resolve</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+function app() {
+    return {
+        tickets: [],
+        stats: { total: 0, resolved: 0, escalated: 0 },
+        showForm: true,
+        newTicketDesc: '',
+        sending: false,
+        lastCreated: null,
+        ingesting: false,
+        kbResult: '',
+        searchQuery: '',
+        searchResults: [],
+        sseConnected: false,
+        sse: null,
+        pollingTimer: null,
+
+        init() {
+            this.connectSSE();
+        },
+
+        statusClass(s) {
+            return { open: 'bg-amber-50 text-amber-700', resolved: 'bg-emerald-50 text-emerald-700', escalated: 'bg-red-50 text-red-700' }[s] || 'bg-slate-50 text-slate-600';
+        },
+
+        renderMD(text) {
+            try { return DOMPurify.sanitize(marked.parse(text || '')); } catch(e) { return ''; }
+        },
+
+        connectSSE() {
+            if (typeof EventSource === 'undefined') { this.startPolling(); return; }
+            this.sse = new EventSource('/api/v1/tickets/stream');
+            this.sse.addEventListener('tickets_updated', (e) => {
+                const data = JSON.parse(e.data);
+                this.updateTickets(data.tickets);
+                if (!this.sseConnected) this.sseConnected = true;
+            });
+            this.sse.onerror = () => {
+                this.sseConnected = false;
+                this.sse.close();
+                this.startPolling();
+            };
+        },
+
+        startPolling() {
+            if (this.pollingTimer) return;
+            this.pollingTimer = setInterval(async () => {
+                try {
+                    const r = await fetch('/api/v1/tickets');
+                    this.updateTickets((await r.json()).tickets);
+                } catch(e) { console.warn('Polling error', e); }
+            }, 5000);
+        },
+
+        updateTickets(tickets) {
+            this.tickets = tickets;
+            this.stats.total = tickets.length;
+            this.stats.resolved = tickets.filter(t => t.status === 'resolved').length;
+            this.stats.escalated = tickets.filter(t => t.status === 'escalated').length;
+        },
+
+        async createTicket() {
+            if (!this.newTicketDesc.trim()) return;
+            this.sending = true;
+            try {
+                const r = await fetch('/api/v1/tickets', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({description: this.newTicketDesc})
+                });
+                const data = await r.json();
+                this.lastCreated = data.id;
+                this.newTicketDesc = '';
+                setTimeout(() => this.lastCreated = null, 3000);
+            } catch(e) { alert('Error: ' + e.message); }
+            finally { this.sending = false; }
+        },
+
+        async ingestKB() {
+            this.ingesting = true;
+            try {
+                const r = await fetch('/api/v1/knowledge-base/ingest', {method: 'POST'});
+                const data = await r.json();
+                this.kbResult = '✅ ' + data.documents_ingested + ' documents ingested';
+            } catch(e) { this.kbResult = '❌ Error: ' + e.message; }
+            finally { this.ingesting = false; }
+        },
+
+        async searchKB() {
+            if (!this.searchQuery.trim()) return;
+            try {
+                const r = await fetch('/api/v1/documents/search?query=' + encodeURIComponent(this.searchQuery) + '&limit=3');
+                this.searchResults = (await r.json()).results || [];
+            } catch(e) { alert('Search error: ' + e.message); }
+        },
+
+        openAdmin(id) {
+            window.location.href = '/admin';
+        }
+    }
+}
+</script>
 </body>
 </html>
