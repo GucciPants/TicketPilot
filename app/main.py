@@ -5,6 +5,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router
 from app.database import Base, engine
 from app.models import Ticket
+import os
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -19,7 +27,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

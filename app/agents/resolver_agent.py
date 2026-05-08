@@ -1,13 +1,14 @@
 """Resolver Agent - Generates ticket resolution using LLM and context."""
 from app.agents.base import BaseAgent
 from langchain.schema import HumanMessage
+import os
 
 class ResolverAgent(BaseAgent):
     """Generates a resolution response based on ticket details and context."""
 
     def __init__(self):
         super().__init__(
-            model=None,  # Will use default from env
+            model=os.getenv("POWER_MODEL", "anthropic/claude-sonnet-4-20250514"),
             temperature=0.7
         )
 

@@ -79,6 +79,12 @@
     <script>
         const API_BASE = '/api/v1';
 
+        function esc(str) {
+            var d = document.createElement('div');
+            d.appendChild(document.createTextNode(str || ''));
+            return d.innerHTML;
+        }
+
         function getOpenDetails() {
             var ids = [];
             document.querySelectorAll('details[data-id]').forEach(function(d) {
@@ -99,6 +105,7 @@
             var div = document.getElementById('escalatedList');
             try {
                 const r = await fetch(API_BASE + '/tickets?status=escalated');
+                if (!r.ok) throw new Error('API Error ' + r.status);
                 const data = await r.json();
 
                 if (!data.tickets || data.tickets.length === 0) {
@@ -106,24 +113,24 @@
                     return;
                 }
 
-                let html = '<p style="margin-bottom:16px;"><strong>' + data.tickets.length + '</strong> ticket(s) waiting</p>';
+                var html = '<p style="margin-bottom:16px;"><strong>' + data.tickets.length + '</strong> ticket(s) waiting</p>';
                 data.tickets.forEach(function(t) {
                     var info = t.escalation_info || {};
                     var fmtRes = t.resolution ? DOMPurify.sanitize(marked.parse(t.resolution)) : '';
                     html += '<div class="ticket-item" style="border-left-color:#ef4444;">';
-                    html += '<h4>Ticket #' + t.id + ' <span class="ticket-status status-escalated">escalated</span></h4>';
-                    html += '<p><strong>Issue:</strong> ' + t.description + '</p>';
+                    html += '<h4>Ticket #' + esc(t.id) + ' <span class="ticket-status status-escalated">escalated</span></h4>';
+                    html += '<p><strong>Issue:</strong> ' + esc(t.description) + '</p>';
                     html += '<div class="ticket-meta">';
-                    if (info.priority) html += '<span>🔴 ' + info.priority.toUpperCase() + '</span>';
-                    if (info.category) html += '<span>📂 ' + info.category + '</span>';
-                    if (info.reason) html += '<span>⚠️ ' + info.reason + '</span>';
-                    html += '<span>🕐 ' + t.created_at + '</span>';
+                    if (info.priority) html += '<span>🔴 ' + esc(info.priority.toUpperCase()) + '</span>';
+                    if (info.category) html += '<span>📂 ' + esc(info.category) + '</span>';
+                    if (info.reason) html += '<span>⚠️ ' + esc(info.reason) + '</span>';
+                    html += '<span>🕐 ' + esc(t.created_at) + '</span>';
                     html += '</div>';
                     if (fmtRes) {
-                        html += '<details data-id="' + t.id + '"><summary>📄 View AI resolution (reference)</summary>';
+                        html += '<details data-id="' + esc(t.id) + '"><summary>📄 View AI resolution (reference)</summary>';
                         html += '<div class="resolution-content">' + fmtRes + '</div></details>';
                     }
-                    html += '<form class="resolve-form" data-id="' + t.id + '">';
+                    html += '<form class="resolve-form" data-id="' + esc(t.id) + '">';
                     html += '<label style="font-weight:600;display:block;margin-bottom:6px;">✏️ Your Resolution:</label>';
                     html += '<textarea name="resolution" placeholder="Enter resolution..." rows="4" required></textarea>';
                     html += '<button type="submit" class="btn-secondary" style="background:#059669;">✅ Mark as Resolved</button>';
@@ -155,7 +162,7 @@
                                 var errData = await resp.json();
                                 btn.textContent = '❌ Error';
                                 btn.disabled = false;
-                                alert('Error: ' + (errData.detail || 'Unknown'));
+                                alert('Error: ' + esc(errData.detail || 'Unknown'));
                             }
                         } catch (err) {
                             btn.textContent = '❌ Error';
@@ -164,7 +171,7 @@
                     });
                 });
             } catch (err) {
-                div.innerHTML = '<p style="color:red">Error: ' + err.message + '</p>';
+                div.innerHTML = '<p style="color:red">Error: ' + esc(err.message) + '</p>';
             }
         }
 
