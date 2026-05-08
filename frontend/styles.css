@@ -192,6 +192,22 @@ button:active {
     font-size: 0.95rem;
 }
 
+.resolution-content {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px 0;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    max-height: 300px;
+    overflow-y: auto;
+    display: block;
+}
+.resolution-content p { margin: 6px 0; }
+.resolution-content ul, .resolution-content ol { padding-left: 20px; margin: 6px 0; }
+.resolution-content strong { font-weight: 600; }
+
 .ticket-status {
     display: inline-block;
     padding: 3px 10px;

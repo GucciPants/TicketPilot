@@ -1,6 +1,16 @@
 document.addEventListener('DOMContentLoaded', function() {
     const API_BASE = '/api/v1';
 
+    // Helper: render markdown safely
+    function fmtMarkdown(text) {
+        if (!text) return '';
+        try {
+            return DOMPurify.sanitize(marked.parse(text));
+        } catch(e) {
+            return esc(text);
+        }
+    }
+
     // Helper: escape HTML to prevent XSS
     function esc(str) {
         var div = document.createElement('div');
@@ -73,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 '<h4>Ticket #' + esc(data.id) + '</h4>' +
                 '<p><strong>Description:</strong> ' + esc(data.description) + '</p>' +
                 '<p><strong>Status:</strong> <span class="ticket-status status-' + esc(data.status) + '">' + esc(data.status) + '</span></p>' +
-                '<p><strong>Resolution:</strong> ' + esc(data.resolution || 'Pending...') + '</p>' +
+                '<p><strong>Resolution:</strong><br><span class="resolution-content">' + fmtMarkdown(data.resolution || 'Pending...') + '</span></p>' +
                 '<p><small>Created: ' + esc(data.created_at) + '</small></p>' +
                 '</div>';
         } catch (error) {
@@ -155,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 html += '<div class="ticket-item">' +
                     '<h4>Ticket #' + esc(t.id) + ' - <span class="ticket-status status-' + esc(t.status) + '">' + esc(t.status) + '</span></h4>' +
                     '<p>' + esc(t.description) + '</p>' +
-                    (hasResolution ? '<p><strong>Resolution:</strong> ' + esc(t.resolution) + '</p>' : '<p><em>⏳ Processing...</em></p>') +
+                    (hasResolution ? '<p><strong>Resolution:</strong><br><span class="resolution-content">' + fmtMarkdown(t.resolution) + '</span></p>' : '<p><em>⏳ Processing...</em></p>') +
                     '</div>';
             });
         } else {
