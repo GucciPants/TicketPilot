@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             document.getElementById('ticketResult').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
             document.getElementById('ticketDesc').value = '';
-            loadTicketHistory();
         } catch (error) {
             document.getElementById('ticketResult').innerHTML = `<p style="color:red">Error: ${error.message}</p>`;
         }
@@ -94,40 +93,59 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Load ticket history (auto-refreshes every 5 seconds)
-    let firstLoad = true;
-    async function loadTicketHistory() {
+    // Load ticket history (via SSE for real-time updates)
+    const eventSource = new EventSource(`${API_BASE}/tickets/stream`);
+    
+    eventSource.addEventListener('tickets_updated', function(e) {
+        const data = JSON.parse(e.data);
         const div = document.getElementById('ticketHistory');
-        if (firstLoad) {
-            div.innerHTML = 'Loading tickets...';
+        let html = '';
+        if (data.tickets && data.tickets.length > 0) {
+            data.tickets.forEach(t => {
+                const hasResolution = t.status === 'resolved' || t.status === 'escalated';
+                html += `<div class="ticket-item">
+                    <h4>Ticket #${t.id} - <span class="ticket-status status-${t.status}">${t.status}</span></h4>
+                    <p>${t.description}</p>
+                    ${hasResolution 
+                        ? `<p><strong>Resolution:</strong> ${t.resolution}</p>` 
+                        : '<p><em>⏳ Processing...</em></p>'}
+                </div>`;
+            });
+        } else {
+            html = '<p>No tickets yet. Create one above!</p>';
         }
-        try {
-            const response = await fetch(`${API_BASE}/tickets`);
-            const data = await response.json();
-            let html = '';
-            if (data.tickets && data.tickets.length > 0) {
-                data.tickets.forEach(t => {
-                    const hasResolution = t.status === 'resolved' || t.status === 'escalated';
-                    html += `<div class="ticket-item">
-                        <h4>Ticket #${t.id} - <span class="ticket-status status-${t.status}">${t.status}</span></h4>
-                        <p>${t.description}</p>
-                        ${hasResolution 
-                            ? `<p><strong>Resolution:</strong> ${t.resolution}</p>` 
-                            : '<p><em>⏳ Processing...</em></p>'}
-                    </div>`;
-                });
-            } else {
-                html = '<p>No tickets yet. Create one above!</p>';
-            }
-            div.innerHTML = html;
-            firstLoad = false;
-        } catch (error) {
-            if (firstLoad) {
-                div.innerHTML = `<p style="color:red">Error loading tickets: ${error.message}</p>`;
-            }
+        div.innerHTML = html;
+    });
+    
+    eventSource.onerror = function() {
+        console.warn('SSE connection error, falling back to polling...');
+        // Fallback to polling if SSE fails
+        if (!window._pollingFallback) {
+            window._pollingFallback = setInterval(async function() {
+                try {
+                    const response = await fetch(`${API_BASE}/tickets`);
+                    const data = await response.json();
+                    const div = document.getElementById('ticketHistory');
+                    let html = '';
+                    if (data.tickets && data.tickets.length > 0) {
+                        data.tickets.forEach(t => {
+                            const hasResolution = t.status === 'resolved' || t.status === 'escalated';
+                            html += `<div class="ticket-item">
+                                <h4>Ticket #${t.id} - <span class="ticket-status status-${t.status}">${t.status}</span></h4>
+                                <p>${t.description}</p>
+                                ${hasResolution 
+                                    ? `<p><strong>Resolution:</strong> ${t.resolution}</p>` 
+                                    : '<p><em>⏳ Processing...</em></p>'}
+                            </div>`;
+                        });
+                    } else {
+                        html = '<p>No tickets yet. Create one above!</p>';
+                    }
+                    div.innerHTML = html;
+                } catch (err) {
+                    console.error('Polling fallback error:', err);
+                }
+            }, 5000);
         }
-    }
-
-    loadTicketHistory();
-    setInterval(loadTicketHistory, 5000); // Auto-refresh every 5s
+    };
 });

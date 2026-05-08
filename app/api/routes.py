@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from datetime import datetime
 import redis
 import json
 import os
+import asyncio
 from typing import Optional
 
 from app.models import Ticket, TicketStatus
@@ -53,6 +55,38 @@ async def create_ticket(ticket_data: TicketCreate, db: Session = Depends(get_db)
     
     return ticket.to_dict()
 
+@router.get("/tickets")
+async def list_tickets(db: Session = Depends(get_db)):
+    """List all tickets."""
+    tickets = db.query(Ticket).order_by(Ticket.created_at.desc(), Ticket.id.desc()).all()
+    return {"tickets": [ticket.to_dict() for ticket in tickets]}
+
+
+@router.get("/tickets/stream")
+async def ticket_stream(db: Session = Depends(get_db)):
+    """SSE endpoint for real-time ticket updates."""
+    async def event_generator():
+        last_ticket_count = 0
+        while True:
+            try:
+                tickets = db.query(Ticket).order_by(Ticket.created_at.desc(), Ticket.id.desc()).all()
+                current_count = len(tickets)
+                
+                if current_count != last_ticket_count:
+                    last_ticket_count = current_count
+                    tickets_data = [t.to_dict() for t in tickets]
+                    yield f"event: tickets_updated\ndata: {json.dumps({'tickets': tickets_data})}\n\n"
+                
+                await asyncio.sleep(2)
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                print(f"SSE error: {e}")
+                await asyncio.sleep(2)
+    
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
 @router.get("/tickets/{ticket_id}", response_model=TicketResponse)
 async def get_ticket(ticket_id: int, db: Session = Depends(get_db)):
     """Get ticket status by ID."""
@@ -61,11 +95,6 @@ async def get_ticket(ticket_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Ticket not found")
     return ticket.to_dict()
 
-@router.get("/tickets")
-async def list_tickets(db: Session = Depends(get_db)):
-    """List all tickets."""
-    tickets = db.query(Ticket).order_by(Ticket.created_at.desc(), Ticket.id.desc()).all()
-    return {"tickets": [ticket.to_dict() for ticket in tickets]}
 
 @router.get("/health")
 async def health_check():
