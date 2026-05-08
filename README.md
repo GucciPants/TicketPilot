@@ -207,9 +207,12 @@ curl "http://localhost:8000/api/v1/documents/search?query=login&limit=3"
 - [x] Prometheus monitoring (token usage, latency, ticket counts)
 - [x] Cost optimization (model selection, token tracking)
 - [x] Frontend dashboard with auto-refresh
-- [ ] Unit & integration tests
-- [ ] WebSocket or SSE for real-time updates
-- [ ] Escalation workflows with human-in-the-loop
+- [x] Unit & integration tests (20 pytest tests)
+- [x] SSE real-time updates (EventSource)
+- [x] Escalation workflow with human-in-the-loop (`/admin` page)
+- [x] Admin page with Markdown-formatted resolutions
+
+> **All roadmap items completed!** 🎉
 
 ## License
 
