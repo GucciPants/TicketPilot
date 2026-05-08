@@ -84,16 +84,20 @@ def evaluate_single(generated: str, expected_resolution: str, expected_keywords:
 
 def summarize_results(results: List[Dict]) -> Dict:
     """Aggregate results across all evaluation items."""
-    n = len(results)
+    # Filter out error results
+    valid = [r for r in results if "keyword_coverage" in r]
+    n = len(valid)
     if n == 0:
-        return {}
+        return {"total_evaluated": len(results), "successful": 0, "errors": len(results) - n}
     
     return {
-        "total_evaluated": n,
-        "avg_keyword_coverage": sum(r["keyword_coverage"] for r in results) / n,
-        "avg_rouge_l_f1": sum(r["rouge_l_f1"] for r in results) / n,
-        "avg_retrieval_hitrate": sum(r.get("retrieval_hitrate", 0) for r in results) / n,
-        "exact_match_rate": sum(1 for r in results if r["exact_match"]) / n,
-        "total_keywords_found": sum(r["found_keywords"] for r in results),
-        "total_keywords_expected": sum(r["found_keywords"] + len(r.get("missing_keywords", [])) for r in results)
+        "total_evaluated": len(results),
+        "successful": n,
+        "errors": len(results) - n,
+        "avg_keyword_coverage": sum(r["keyword_coverage"] for r in valid) / n,
+        "avg_rouge_l_f1": sum(r["rouge_l_f1"] for r in valid) / n,
+        "avg_retrieval_hitrate": sum(r.get("retrieval_hitrate", 0) for r in valid) / n,
+        "exact_match_rate": sum(1 for r in valid if r["exact_match"]) / n,
+        "total_keywords_found": sum(r["found_keywords"] for r in valid),
+        "total_keywords_expected": sum(r["found_keywords"] + len(r.get("missing_keywords", [])) for r in valid)
     }

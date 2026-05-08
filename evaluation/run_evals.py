@@ -24,7 +24,7 @@ import requests
 API_BASE = "http://localhost:8000/api/v1"
 
 
-def wait_for_processing(ticket_id: int, max_wait: int = 60, interval: int = 5) -> dict:
+def wait_for_processing(ticket_id: int, max_wait: int = 300, interval: int = 5) -> dict:
     """Poll until ticket is resolved or escalated."""
     for _ in range(max_wait // interval):
         resp = requests.get(f"{API_BASE}/tickets/{ticket_id}")
