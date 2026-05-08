@@ -6,7 +6,7 @@ An AI-powered support ticket resolution system demonstrating **multi-agent orche
 
 TicketPilot automates the lifecycle of support tickets—from ingestion to resolution—using a **multi-agent pipeline**: a Router agent classifies the ticket, a Context agent retrieves relevant knowledge, a Resolver agent generates a response, and a Quality agent validates the result. The entire pipeline is orchestrated end-to-end.
 
-Built as a portfolio project for an AI Engineer role at a hosting company.
+Built as an AI Engineer portfolio demonstration project.
 
 ## Key Features
 

@@ -24,7 +24,7 @@ class ResolverAgent(BaseAgent):
             for doc in state["context_docs"]:
                 context_text += f"- {doc['text'][:300]}...\n"
         
-        prompt = f"""You are a support agent for a hosting company. 
+        prompt = f"""You are a support agent for a SaaS platform. 
 Ticket category: {category}
 Ticket description: {description}{context_text}
 
