@@ -78,8 +78,24 @@
     <script>
         const API_BASE = '/api/v1';
 
+        function getOpenDetails() {
+            var ids = [];
+            document.querySelectorAll('details[data-id]').forEach(function(d) {
+                if (d.open) ids.push(d.dataset.id);
+            });
+            return ids;
+        }
+
+        function restoreOpenDetails(ids) {
+            if (!ids || ids.length === 0) return;
+            document.querySelectorAll('details[data-id]').forEach(function(d) {
+                if (ids.indexOf(d.dataset.id) !== -1) d.open = true;
+            });
+        }
+
         async function loadEscalated() {
-            const div = document.getElementById('escalatedList');
+            var openIds = getOpenDetails();
+            var div = document.getElementById('escalatedList');
             try {
                 const r = await fetch(API_BASE + '/tickets?status=escalated');
                 const data = await r.json();
@@ -103,7 +119,7 @@
                     html += '<span>🕐 ' + t.created_at + '</span>';
                     html += '</div>';
                     if (fmtRes) {
-                        html += '<details><summary>📄 View AI resolution (reference)</summary>';
+                        html += '<details data-id="' + t.id + '"><summary>📄 View AI resolution (reference)</summary>';
                         html += '<div class="resolution-content">' + fmtRes + '</div></details>';
                     }
                     html += '<form class="resolve-form" data-id="' + t.id + '">';
@@ -113,6 +129,7 @@
                     html += '</form></div>';
                 });
                 div.innerHTML = html;
+                restoreOpenDetails(openIds);
 
                 document.querySelectorAll('.resolve-form').forEach(function(form) {
                     form.addEventListener('submit', async function(e) {
