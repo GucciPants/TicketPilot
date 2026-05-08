@@ -22,5 +22,10 @@ app.mount("/static", StaticFiles(directory="frontend"), name="static")
 async def read_index():
     return FileResponse("frontend/index.html")
 
+# Serve admin page
+@app.get("/admin")
+async def read_admin():
+    return FileResponse("frontend/admin.html")
+
 # Include API routes
 app.include_router(router, prefix="/api/v1")

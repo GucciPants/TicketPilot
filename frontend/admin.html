@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketPilot Admin - Escalated Tickets</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <h1>🔧 TicketPilot Admin</h1>
+        <p class="subtitle">Human-in-the-Loop: Review & Resolve Escalated Tickets</p>
+        <a href="/" class="btn-link" style="margin-top: 10px;">← Back to Dashboard</a>
+    </header>
+
+    <div class="container">
+        <section class="card full-width">
+            <h2>🚨 Escalated Tickets</h2>
+            <div id="escalatedList">
+                <p>Loading escalated tickets...</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1';
+
+        async function loadEscalated() {
+            const div = document.getElementById('escalatedList');
+            try {
+                const response = await fetch(`${API_BASE}/tickets?status=escalated`);
+                const data = await response.json();
+
+                if (!data.tickets || data.tickets.length === 0) {
+                    div.innerHTML = '<p style="color: #065f46; font-weight: 600;">✅ No escalated tickets. All tickets resolved!</p>';
+                    return;
+                }
+
+                let html = `<p style="margin-bottom: 16px;"><strong>${data.tickets.length}</strong> ticket(s) waiting for human review</p>`;
+                data.tickets.forEach(t => {
+                    const info = t.escalation_info || {};
+                    html += `
+                        <div class="ticket-item" style="border-left-color: #ef4444;">
+                            <h4>Ticket #${t.id} 
+                                <span class="ticket-status status-escalated">escalated</span>
+                                <span style="font-size: 0.8rem; color: #6b7280; margin-left: 8px;">
+                                    ${info.priority ? `[${info.priority.toUpperCase()}]` : ''} 
+                                    ${info.category ? `(${info.category})` : ''}
+                                </span>
+                            </h4>
+                            <p><strong>Issue:</strong> ${t.description}</p>
+                            ${info.reason ? `<p><strong>Escalation reason:</strong> ${info.reason}</p>` : ''}
+                            ${t.resolution ? `<p><strong>AI resolution (for reference):</strong><br><small>${t.resolution.substring(0, 300)}...</small></p>` : ''}
+                            <p><small>Created: ${t.created_at}</small></p>
+                            
+                            <form class="resolve-form" data-ticket-id="${t.id}">
+                                <textarea name="resolution" placeholder="Enter your resolution here..." rows="3" required></textarea>
+                                <button type="submit" class="btn-secondary" style="background: #059669;">✅ Mark as Resolved</button>
+                            </form>
+                        </div>
+                    `;
+                });
+                div.innerHTML = html;
+
+                // Bind resolve forms
+                document.querySelectorAll('.resolve-form').forEach(form => {
+                    form.addEventListener('submit', async function(e) {
+                        e.preventDefault();
+                        const btn = this.querySelector('button');
+                        const textarea = this.querySelector('textarea');
+                        const resolution = textarea.value;
+                        const ticketId = this.dataset.ticketId;
+
+                        btn.disabled = true;
+                        btn.textContent = 'Resolving...';
+                        try {
+                            const response = await fetch(`${API_BASE}/tickets/${ticketId}/resolve`, {
+                                method: 'PATCH',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({resolution})
+                            });
+                            const data = await response.json();
+                            if (response.ok) {
+                                btn.textContent = '✅ Resolved!';
+                                btn.style.background = '#065f46';
+                                textarea.disabled = true;
+                                setTimeout(loadEscalated, 1000);
+                            } else {
+                                btn.textContent = '❌ Error - Try Again';
+                                btn.disabled = false;
+                                alert(`Error: ${data.detail || 'Unknown error'}`);
+                            }
+                        } catch (err) {
+                            btn.textContent = '❌ Error - Try Again';
+                            btn.disabled = false;
+                        }
+                    });
+                });
+            } catch (err) {
+                div.innerHTML = `<p style="color:red">Error loading tickets: ${err.message}</p>`;
+            }
+        }
+
+        loadEscalated();
+        setInterval(loadEscalated, 10000);
+    </script>
+</body>
+</html>

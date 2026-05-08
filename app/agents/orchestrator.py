@@ -8,6 +8,7 @@ from app.metrics import ticket_processing_seconds, worker_processed_counter, tic
 from app.models import Ticket, TicketStatus
 from app.database import SessionLocal
 import time
+import json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,13 @@ class Orchestrator:
                 state["status"] = "escalated"
                 ticket_escalated_counter.inc()
                 reason = state.get("quality_check", {}).get("reason", "Quality check failed")
+                # Store escalation details
+                state["escalation_info"] = {
+                    "reason": reason,
+                    "category": state.get("category"),
+                    "priority": state.get("priority"),
+                    "agent_notes": f"Escalated by QualityAgent: {reason}"
+                }
                 logger.info(f"[{ticket_id}] Escalated: {reason}")
             
             # Track metrics
@@ -106,6 +114,12 @@ class Orchestrator:
             if ticket:
                 ticket.resolution = state.get("resolution")
                 ticket.status = TicketStatus(state["status"]) if state["status"] in [s.value for s in TicketStatus] else TicketStatus.ESCALATED
+                
+                if "escalation_info" in state:
+                    ticket.escalation_info = json.dumps(state["escalation_info"])
+                
+                ticket.resolved_by = "agent" if state.get("status") == "resolved" else None
+                
                 db.commit()
         except Exception as e:
             logger.error(f"Failed to update ticket {ticket_id}: {e}")

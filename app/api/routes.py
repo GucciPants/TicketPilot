@@ -25,8 +25,13 @@ class TicketResponse(BaseModel):
     description: str
     status: str
     resolution: str | None = None
+    escalation_info: dict | None = None
+    resolved_by: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
+
+class TicketResolve(BaseModel):
+    resolution: str
 
 # Redis connection
 redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://redis:6379/0"))
@@ -56,9 +61,12 @@ async def create_ticket(ticket_data: TicketCreate, db: Session = Depends(get_db)
     return ticket.to_dict()
 
 @router.get("/tickets")
-async def list_tickets(db: Session = Depends(get_db)):
-    """List all tickets."""
-    tickets = db.query(Ticket).order_by(Ticket.created_at.desc(), Ticket.id.desc()).all()
+async def list_tickets(db: Session = Depends(get_db), status: Optional[str] = None):
+    """List all tickets, optionally filtered by status."""
+    query = db.query(Ticket)
+    if status:
+        query = query.filter(Ticket.status == status)
+    tickets = query.order_by(Ticket.created_at.desc(), Ticket.id.desc()).all()
     return {"tickets": [ticket.to_dict() for ticket in tickets]}
 
 
@@ -93,6 +101,26 @@ async def get_ticket(ticket_id: int, db: Session = Depends(get_db)):
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
+    return ticket.to_dict()
+
+
+class TicketResolve(BaseModel):
+    resolution: str
+
+@router.patch("/tickets/{ticket_id}/resolve", response_model=TicketResponse)
+async def resolve_ticket(ticket_id: int, body: TicketResolve, db: Session = Depends(get_db)):
+    """Manually resolve an escalated ticket (admin action)."""
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    if ticket.status != TicketStatus.ESCALATED:
+        raise HTTPException(status_code=400, detail="Only escalated tickets can be manually resolved")
+    
+    ticket.resolution = body.resolution
+    ticket.status = TicketStatus.RESOLVED
+    ticket.resolved_by = "admin"
+    db.commit()
+    db.refresh(ticket)
     return ticket.to_dict()
 
 
