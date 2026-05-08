@@ -5,6 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TicketPilot Admin - Escalated Tickets</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .resolution-content {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 8px 0;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .resolution-content h1, .resolution-content h2, .resolution-content h3, .resolution-content h4 {
+            margin: 12px 0 6px;
+            color: #1a1a2e;
+        }
+        .resolution-content h3 { font-size: 1rem; }
+        .resolution-content h4 { font-size: 0.9rem; }
+        .resolution-content ul, .resolution-content ol {
+            padding-left: 20px;
+            margin: 6px 0;
+        }
+        .resolution-content li { margin-bottom: 4px; }
+        .resolution-content p { margin: 6px 0; }
+        .resolution-content strong { font-weight: 600; }
+        .ticket-meta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin: 8px 0;
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+        .ticket-meta span {
+            background: #f3f4f6;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .resolve-form {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+        }
+        details summary {
+            cursor: pointer;
+            color: #3b82f6;
+            font-weight: 500;
+            margin: 8px 0;
+            padding: 4px 0;
+        }
+        details summary:hover { color: #2563eb; }
+    </style>
 </head>
 <body>
     <header>
@@ -28,76 +81,72 @@
         async function loadEscalated() {
             const div = document.getElementById('escalatedList');
             try {
-                const response = await fetch(`${API_BASE}/tickets?status=escalated`);
-                const data = await response.json();
+                const r = await fetch(API_BASE + '/tickets?status=escalated');
+                const data = await r.json();
 
                 if (!data.tickets || data.tickets.length === 0) {
-                    div.innerHTML = '<p style="color: #065f46; font-weight: 600;">✅ No escalated tickets. All tickets resolved!</p>';
+                    div.innerHTML = '<p style="color:#065f46;font-weight:600;">✅ No escalated tickets. All resolved!</p>';
                     return;
                 }
 
-                let html = `<p style="margin-bottom: 16px;"><strong>${data.tickets.length}</strong> ticket(s) waiting for human review</p>`;
-                data.tickets.forEach(t => {
-                    const info = t.escalation_info || {};
-                    html += `
-                        <div class="ticket-item" style="border-left-color: #ef4444;">
-                            <h4>Ticket #${t.id} 
-                                <span class="ticket-status status-escalated">escalated</span>
-                                <span style="font-size: 0.8rem; color: #6b7280; margin-left: 8px;">
-                                    ${info.priority ? `[${info.priority.toUpperCase()}]` : ''} 
-                                    ${info.category ? `(${info.category})` : ''}
-                                </span>
-                            </h4>
-                            <p><strong>Issue:</strong> ${t.description}</p>
-                            ${info.reason ? `<p><strong>Escalation reason:</strong> ${info.reason}</p>` : ''}
-                            ${t.resolution ? `<p><strong>AI resolution (for reference):</strong><br><small>${t.resolution.substring(0, 300)}...</small></p>` : ''}
-                            <p><small>Created: ${t.created_at}</small></p>
-                            
-                            <form class="resolve-form" data-ticket-id="${t.id}">
-                                <textarea name="resolution" placeholder="Enter your resolution here..." rows="3" required></textarea>
-                                <button type="submit" class="btn-secondary" style="background: #059669;">✅ Mark as Resolved</button>
-                            </form>
-                        </div>
-                    `;
+                let html = '<p style="margin-bottom:16px;"><strong>' + data.tickets.length + '</strong> ticket(s) waiting</p>';
+                data.tickets.forEach(function(t) {
+                    var info = t.escalation_info || {};
+                    var fmtRes = t.resolution ? marked.parse(t.resolution) : '';
+                    html += '<div class="ticket-item" style="border-left-color:#ef4444;">';
+                    html += '<h4>Ticket #' + t.id + ' <span class="ticket-status status-escalated">escalated</span></h4>';
+                    html += '<p><strong>Issue:</strong> ' + t.description + '</p>';
+                    html += '<div class="ticket-meta">';
+                    if (info.priority) html += '<span>🔴 ' + info.priority.toUpperCase() + '</span>';
+                    if (info.category) html += '<span>📂 ' + info.category + '</span>';
+                    if (info.reason) html += '<span>⚠️ ' + info.reason + '</span>';
+                    html += '<span>🕐 ' + t.created_at + '</span>';
+                    html += '</div>';
+                    if (fmtRes) {
+                        html += '<details><summary>📄 View AI resolution (reference)</summary>';
+                        html += '<div class="resolution-content">' + fmtRes + '</div></details>';
+                    }
+                    html += '<form class="resolve-form" data-id="' + t.id + '">';
+                    html += '<label style="font-weight:600;display:block;margin-bottom:6px;">✏️ Your Resolution:</label>';
+                    html += '<textarea name="resolution" placeholder="Enter resolution..." rows="4" required></textarea>';
+                    html += '<button type="submit" class="btn-secondary" style="background:#059669;">✅ Mark as Resolved</button>';
+                    html += '</form></div>';
                 });
                 div.innerHTML = html;
 
-                // Bind resolve forms
-                document.querySelectorAll('.resolve-form').forEach(form => {
+                document.querySelectorAll('.resolve-form').forEach(function(form) {
                     form.addEventListener('submit', async function(e) {
                         e.preventDefault();
-                        const btn = this.querySelector('button');
-                        const textarea = this.querySelector('textarea');
-                        const resolution = textarea.value;
-                        const ticketId = this.dataset.ticketId;
-
+                        var btn = this.querySelector('button');
+                        var ta = this.querySelector('textarea');
+                        var id = this.dataset.id;
                         btn.disabled = true;
                         btn.textContent = 'Resolving...';
                         try {
-                            const response = await fetch(`${API_BASE}/tickets/${ticketId}/resolve`, {
+                            var resp = await fetch(API_BASE + '/tickets/' + id + '/resolve', {
                                 method: 'PATCH',
                                 headers: {'Content-Type': 'application/json'},
-                                body: JSON.stringify({resolution})
+                                body: JSON.stringify({resolution: ta.value})
                             });
-                            const data = await response.json();
-                            if (response.ok) {
+                            if (resp.ok) {
                                 btn.textContent = '✅ Resolved!';
                                 btn.style.background = '#065f46';
-                                textarea.disabled = true;
+                                ta.disabled = true;
                                 setTimeout(loadEscalated, 1000);
                             } else {
-                                btn.textContent = '❌ Error - Try Again';
+                                var errData = await resp.json();
+                                btn.textContent = '❌ Error';
                                 btn.disabled = false;
-                                alert(`Error: ${data.detail || 'Unknown error'}`);
+                                alert('Error: ' + (errData.detail || 'Unknown'));
                             }
                         } catch (err) {
-                            btn.textContent = '❌ Error - Try Again';
+                            btn.textContent = '❌ Error';
                             btn.disabled = false;
                         }
                     });
                 });
             } catch (err) {
-                div.innerHTML = `<p style="color:red">Error loading tickets: ${err.message}</p>`;
+                div.innerHTML = '<p style="color:red">Error: ' + err.message + '</p>';
             }
         }
 
