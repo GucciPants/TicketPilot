@@ -40,6 +40,7 @@ services:
       - ./app:/app/app
       - ./frontend:/app/frontend
       - ./tests:/app/tests
+      - ./evaluation:/app/evaluation
 
   worker:
     build:

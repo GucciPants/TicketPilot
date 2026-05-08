@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router
 from app.database import Base, engine
 from app.models import Ticket
+from app.middleware.rate_limit import RateLimitMiddleware
 import os
 import logging
 
@@ -22,6 +23,9 @@ app = FastAPI(
     description="AI-powered support ticket resolution system",
     version="0.1.0"
 )
+
+# Rate limiting middleware
+app.add_middleware(RateLimitMiddleware)
 
 # CORS middleware (allow frontend access)
 app.add_middleware(
