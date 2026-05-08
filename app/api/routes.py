@@ -64,7 +64,7 @@ async def get_ticket(ticket_id: int, db: Session = Depends(get_db)):
 @router.get("/tickets")
 async def list_tickets(db: Session = Depends(get_db)):
     """List all tickets."""
-    tickets = db.query(Ticket).order_by(Ticket.created_at.desc()).all()
+    tickets = db.query(Ticket).order_by(Ticket.created_at.desc(), Ticket.id.desc()).all()
     return {"tickets": [ticket.to_dict() for ticket in tickets]}
 
 @router.get("/health")

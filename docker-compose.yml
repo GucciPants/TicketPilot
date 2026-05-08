@@ -39,6 +39,7 @@ services:
     volumes:
       - ./app:/app/app
       - ./frontend:/app/frontend
+      - ./tests:/app/tests
 
   worker:
     build:
