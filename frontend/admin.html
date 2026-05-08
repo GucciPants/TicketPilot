@@ -6,6 +6,7 @@
     <title>TicketPilot Admin - Escalated Tickets</title>
     <link rel="stylesheet" href="/static/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
     <style>
         .resolution-content {
             background: #f8fafc;
@@ -108,7 +109,7 @@
                 let html = '<p style="margin-bottom:16px;"><strong>' + data.tickets.length + '</strong> ticket(s) waiting</p>';
                 data.tickets.forEach(function(t) {
                     var info = t.escalation_info || {};
-                    var fmtRes = t.resolution ? marked.parse(t.resolution) : '';
+                    var fmtRes = t.resolution ? DOMPurify.sanitize(marked.parse(t.resolution)) : '';
                     html += '<div class="ticket-item" style="border-left-color:#ef4444;">';
                     html += '<h4>Ticket #' + t.id + ' <span class="ticket-status status-escalated">escalated</span></h4>';
                     html += '<p><strong>Issue:</strong> ' + t.description + '</p>';
