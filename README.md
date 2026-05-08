@@ -1,39 +1,46 @@
 # TicketPilot
 
-An AI-powered support ticket resolution system demonstrating agentic workflows, RAG, and orchestration for modern customer service automation.
+An AI-powered support ticket resolution system demonstrating **multi-agent orchestration**, **RAG**, and **observable AI infrastructure**.
 
 ## Overview
 
-TicketPilot is a showcase project for building an AI-driven ticketing backbone. It automates the lifecycle of support tickets—from ingestion to resolution—using intelligent agents, retrieval-augmented generation (RAG), and hybrid orchestration (low-code + code-first). The system is designed to be modular, observable, and cost-efficient.
+TicketPilot automates the lifecycle of support tickets—from ingestion to resolution—using a **multi-agent pipeline**: a Router agent classifies the ticket, a Context agent retrieves relevant knowledge, a Resolver agent generates a response, and a Quality agent validates the result. The entire pipeline is orchestrated end-to-end.
+
+Built as a portfolio project for an AI Engineer role at a hosting company.
 
 ## Key Features
 
-- **REST API** for ticket ingestion and status polling (FastAPI)
-- **AI Agent** for ticket triage, context retrieval, and resolution (Claude/GPT via OpenRouter)
-- **RAG Pipeline** over internal knowledge base (Qdrant vector store)
-- **Hybrid Orchestration**: n8n for low-code workflows, with option for Airflow/Dagster
-- **Cost & Latency Monitoring** (Prometheus, custom metrics)
-- **Event-driven architecture** with Redis message queue
-- **Containerized** with Docker Compose for easy local setup
+- **Multi-Agent Pipeline** — Router → Context → Resolver → Quality agents with streaming state
+- **REST API** — FastAPI with ticket CRUD, document ingestion, and search endpoints
+- **RAG Knowledge Base** — Qdrant vector store with OpenRouter embeddings
+- **Cost Optimization** — Smart model selection (cheap triage vs. powerful resolver), token tracking
+- **Prometheus Metrics** — Token usage, latency, ticket counts, and resolution rates
+- **Frontend Dashboard** — Submit tickets, check status, search knowledge base, auto-refresh
+- **Event-Driven** — Redis message queue for async worker processing
+- **Containerized** — Full Docker Compose stack (PostgreSQL, Redis, Qdrant, FastAPI, Worker, Prometheus)
 
 ## Architecture
 
 ```
 ┌─────────────┐     ┌────────────────┐     ┌─────────────────┐
-│  Ticket     │────▶│   REST API     │────▶│   Redis Queue  │
-│  Source     │     │   (FastAPI)    │     │   (event bus)  │
+│  Frontend   │────▶│   REST API     │────▶│   Redis Queue  │
+│ (HTML/JS)   │     │   (FastAPI)    │     │   (event bus)  │
 └─────────────┘     └────────────────┘     └────────┬────────┘
                                                     │
                                                     ▼
-┌────────────────┐     ┌────────────────┐     ┌─────────────────┐
-│  n8n Workflow │◀───│  Ticket        │────▶│  Agent Worker  │
-│  (low-code)   │     │  Created       │     │  (LLM + RAG)   │
-└────────────────┘     └────────────────┘     └────────┬────────┘
+┌──────────────────────────────────────────────────────────┐
+│                   Orchestrator Pipeline                   │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌───────────┐   │
+│  │ Router  │──│ Context │──│Resolver │──│  Quality  │   │
+│  │  Agent  │  │  Agent  │  │  Agent  │  │   Agent   │   │
+│  └─────────┘  └─────────┘  └─────────┘  └───────────┘   │
+│     classify     RAG          respond      validate      │
+└──────────────────────────────────────────────────────────┘
                                                     │
                                                     ▼
 ┌────────────────┐     ┌────────────────┐     ┌─────────────────┐
-│  Knowledge    │◀───│  Vector Store  │◀───│  Embedding     │
-│  Base (docs)  │     │  (Qdrant)      │     │  Service       │
+│  Knowledge    │◀───│  Vector Store  │◀───│  OpenRouter     │
+│  Base (docs)  │     │  (Qdrant)      │     │  Embeddings     │
 └────────────────┘     └────────────────┘     └─────────────────┘
                                                     │
                                                     ▼
@@ -43,19 +50,30 @@ TicketPilot is a showcase project for building an AI-driven ticketing backbone. 
 └────────────────┘     └────────────────┘     └─────────────────┘
 ```
 
+## Multi-Agent System
+
+| Agent | Role | Model |
+|-------|------|-------|
+| **Router Agent** | Classifies ticket (access/billing/technical/account) and sets priority | Cheap (gemini-flash) |
+| **Context Agent** | Retrieves relevant documents from Qdrant vector store | No LLM (RAG only) |
+| **Resolver Agent** | Generates resolution using ticket context + knowledge base | Powerful (claude-sonnet) |
+| **Quality Agent** | Validates resolution quality, decides: resolved or escalated | Cheap |
+| **Orchestrator** | Coordinates the pipeline, updates database, tracks metrics | Logic only |
+
 ## Tech Stack
 
 | Component | Technology |
 |------------|------------|
 | API | FastAPI |
-| Agent Framework | LangChain (optional) or custom agents |
-| LLM | OpenRouter (Claude, GPT, Gemini) |
+| Agent Framework | Custom multi-agent (LangChain for LLM calls) |
+| LLM Provider | OpenRouter (Gemini Flash, Claude Sonnet) |
+| Embeddings | OpenRouter API (`text-embedding-3-small`, 384 dims) |
 | Vector Database | Qdrant |
-| Embeddings | sentence-transformers or OpenRouter embeddings |
-| Orchestration | n8n (low-code), optionally Airflow |
 | Message Queue | Redis |
+| Database | PostgreSQL (SQLAlchemy) |
 | Monitoring | Prometheus |
 | Containerization | Docker, Docker Compose |
+| Frontend | Vanilla HTML / CSS / JS |
 | Language | Python 3.11+ |
 
 ## Project Structure
@@ -63,18 +81,37 @@ TicketPilot is a showcase project for building an AI-driven ticketing backbone. 
 ```
 ticketpilot/
 ├── app/
-│   ├── api/              # FastAPI routes
-│   ├── agents/           # AI agent logic
-│   ├── rag/              # RAG pipeline (embedding, vector store)
-│   ├── services/         # Redis, Qdrant, LLM clients
-│   ├── workers/          # Background workers (consume from Redis)
-│   └── main.py
-├── n8n/                  # n8n workflow definitions (JSON)
+│   ├── agents/               # Multi-agent system
+│   │   ├── base.py           # BaseAgent abstract class
+│   │   ├── orchestrator.py   # Pipeline coordinator
+│   │   ├── router_agent.py   # Ticket classifier
+│   │   ├── context_agent.py  # RAG context retriever
+│   │   ├── resolver_agent.py # Resolution generator
+│   │   └── quality_agent.py  # Quality validator
+│   ├── api/
+│   │   └── routes.py         # FastAPI endpoints
+│   ├── rag/
+│   │   ├── vector_store.py   # Qdrant integration
+│   │   ├── embedding.py      # OpenRouter embeddings
+│   │   └── document_processor.py  # Text chunking & ingestion
+│   ├── workers/
+│   │   ├── __init__.py
+│   │   └── worker.py         # Redis consumer, delegates to Orchestrator
+│   ├── models.py             # SQLAlchemy models
+│   ├── database.py           # Database session
+│   ├── metrics.py            # Prometheus metrics
+│   └── main.py               # FastAPI app initialization
+├── frontend/
+│   ├── index.html            # Dashboard
+│   ├── styles.css            # Modern SaaS design
+│   └── app.js                # API calls + auto-refresh
 ├── docker-compose.yml
 ├── Dockerfile.api
 ├── Dockerfile.worker
+├── prometheus.yml
 ├── requirements.txt
 ├── .env.example
+├── .gitignore
 └── README.md
 ```
 
@@ -83,8 +120,7 @@ ticketpilot/
 ### Prerequisites
 - Docker & Docker Compose
 - Git
-- Python 3.11+ (for local development)
-- OpenRouter API key (get it from openrouter.ai)
+- OpenRouter API key ([get one free](https://openrouter.ai/keys))
 
 ### Installation
 
@@ -99,123 +135,81 @@ ticketpilot/
    cp .env.example .env
    ```
 
-3. Edit `.env` and add your OpenRouter API key:
-   ```
-   OPENROUTER_API_KEY=sk-or-v1-your_key_here
+3. Edit `.env` and set your OpenRouter API key and preferred models:
+   ```env
+   OPENROUTER_API_KEY=sk-or-v1-your_actual_key
+   TRIAGE_MODEL=google/gemini-2.0-flash-001
+   POWER_MODEL=anthropic/claude-sonnet-4-20250514
    ```
 
-4. Start all services with Docker Compose:
+4. Start all services:
    ```bash
    docker-compose up -d
    ```
-   This will start:
-   - **PostgreSQL** (port 5432)
-   - **Redis** (ports 6379)
-   - **Qdrant** (port 6333)
-   - **FastAPI** (port 8000)
-   - **Worker** (background process)
-   - **Prometheus** (port 9090)
 
-5. Wait for services to start, then ingest sample knowledge base:
+5. Ingest the sample knowledge base:
    ```bash
    curl -X POST http://localhost:8000/api/v1/knowledge-base/ingest
    ```
 
 ### Usage
 
-#### Create a support ticket:
+Open the **frontend dashboard** at **[http://localhost:8000](http://localhost:8000)**.
+
+#### From the Dashboard:
+1. **Ingest Knowledge Base** — Click the button to load sample support docs
+2. **Create Ticket** — Describe your issue and click Submit
+3. **Watch Processing** — Ticket list auto-refreshes every 5 seconds
+4. **Check Status** — Enter a ticket ID to see detailed status
+5. **Search KB** — Query the knowledge base for relevant articles
+6. **Metrics** — View Prometheus token/latency tracking
+
+#### From the Terminal:
 ```bash
+# Create a ticket
 curl -X POST http://localhost:8000/api/v1/tickets \
   -H "Content-Type: application/json" \
   -d '{"description": "I cannot log in to my account"}'
+
+# Check status
+curl http://localhost:8000/api/v1/tickets/1
+
+# List all tickets
+curl http://localhost:8000/api/v1/tickets
+
+# Search knowledge base
+curl "http://localhost:8000/api/v1/documents/search?query=login&limit=3"
 ```
 
-Response will include ticket ID. Worker will process it automatically.
+#### Monitoring:
+- **Prometheus Metrics**: http://localhost:8000/api/v1/metrics
+- **Prometheus UI**: http://localhost:9090
 
-#### Check ticket status:
-```bash
-curl http://localhost:8000/api/v1/tickets/{ticket_id}
-```
+## Environment Variables (.env)
 
-#### Search knowledge base:
-```bash
-curl "http://localhost:8000/api/v1/documents/search?query=login+issue&limit=3"
-```
-
-#### View Prometheus metrics:
-```bash
-curl http://localhost:8000/api/v1/metrics
-```
-
-Or visit Prometheus dashboard at http://localhost:9090.
-
-### Testing the System
-
-1. Ingest knowledge base (if not done yet):
-   ```bash
-   curl -X POST http://localhost:8000/api/v1/knowledge-base/ingest
-   ```
-
-2. Create a test ticket:
-   ```bash
-   curl -X POST http://localhost:8000/api/v1/tickets \
-     -H "Content-Type: application/json" \
-     -d '{"description": "My billing information is incorrect"}'
-   ```
-
-3. Poll for ticket resolution (worker processes asynchronously):
-   ```bash
-   # Wait a few seconds, then check
-   curl http://localhost:8000/api/v1/tickets/1
-   ```
-
-4. Monitor metrics at http://localhost:8000/api/v1/metrics
-
-### Project Structure
-
-```
-ticketpilot/
-├── app/
-│   ├── api/
-│   │   ├── __init__.py
-│   │   └── routes.py          # FastAPI endpoints
-│   ├── agents/              # (reserved for future agents)
-│   ├── rag/
-│   │   ├── __init__.py
-│   │   ├── vector_store.py   # Qdrant integration
-│   │   ├── embedding.py      # Sentence-transformers embeddings
-│   │   └── document_processor.py  # Text chunking & ingestion
-│   ├── services/             # (reserved for services)
-│   ├── workers/
-│   │   ├── __init__.py
-│   │   └── worker.py        # Ticket processing worker
-│   ├── models.py           # SQLAlchemy models
-│   ├── database.py         # Database session
-│   ├── metrics.py          # Prometheus metrics
-│   └── main.py            # FastAPI app initialization
-├── n8n/                   # (n8n workflows - skipped per user request)
-├── docker-compose.yml
-├── Dockerfile.api
-├── Dockerfile.worker
-├── requirements.txt
-├── .env.example
-├── .gitignore
-└── README.md
-```
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `OPENROUTER_API_KEY` | — | Your OpenRouter API key (required) |
+| `QDRANT_URL` | `http://qdrant:6333` | Qdrant vector DB URL |
+| `REDIS_URL` | `redis://redis:6379/0` | Redis connection string |
+| `DATABASE_URL` | `postgresql://...` | PostgreSQL connection string |
+| `TRIAGE_MODEL` | `google/gemini-2.0-flash-001` | Cheap model for classification |
+| `POWER_MODEL` | `anthropic/claude-sonnet-4-20250514` | Powerful model for resolution |
 
 ## Roadmap
 
-- [x] Project setup
+- [x] Project setup and Docker stack
 - [x] PostgreSQL persistence (SQLAlchemy)
-- [x] Core API endpoints (tickets, documents, metrics)
-- [x] Redis event publishing
-- [x] LangChain worker with OpenRouter
-- [x] RAG pipeline (Qdrant, embeddings, document processing)
-- [x] Prometheus metrics (token usage, latency, ticket counts)
-- [x] Cost optimization (Redis caching, model selection)
-- [ ] n8n workflow - SKIPPED per user request
-- [ ] Unit tests
-- [ ] Frontend dashboard (optional)
+- [x] REST API (tickets, documents, metrics)
+- [x] Redis event-driven worker
+- [x] Multi-agent pipeline (Router → Context → Resolver → Quality)
+- [x] RAG knowledge base (Qdrant + OpenRouter embeddings)
+- [x] Prometheus monitoring (token usage, latency, ticket counts)
+- [x] Cost optimization (model selection, token tracking)
+- [x] Frontend dashboard with auto-refresh
+- [ ] Unit & integration tests
+- [ ] WebSocket or SSE for real-time updates
+- [ ] Escalation workflows with human-in-the-loop
 
 ## License
 
