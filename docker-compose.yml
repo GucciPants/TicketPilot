@@ -47,6 +47,8 @@ services:
       dockerfile: Dockerfile.worker
     env_file:
       - .env
+    environment:
+      - PYTHONUNBUFFERED=1
     depends_on:
       - redis
       - qdrant
