@@ -69,17 +69,32 @@ class Orchestrator:
             state = self.quality.run(state)
             
             # Final decision
-            if state.get("quality_check") and state["quality_check"].get("passed"):
+            qc = state.get("quality_check", {})
+            if qc.get("passed"):
                 state["status"] = "resolved"
                 ticket_resolved_counter.inc()
-                logger.info(f"[{ticket_id}] Resolution passed quality check")
+                # Store quality check result for resolved tickets too
+                state["escalation_info"] = {
+                    "confidence": qc.get("confidence", 0.0),
+                    "citation_score": qc.get("citation_score", 0.0),
+                    "hallucination_warnings": qc.get("hallucination_warnings", []),
+                    "category": state.get("category"),
+                    "priority": state.get("priority"),
+                    "agent_notes": "Auto-resolved by QualityAgent"
+                }
+                logger.info(f"[{ticket_id}] Resolution passed quality check (confidence: {qc.get('confidence', 0)})")
             else:
                 state["status"] = "escalated"
                 ticket_escalated_counter.inc()
                 reason = state.get("quality_check", {}).get("reason", "Quality check failed")
                 # Store escalation details
+                qc = state.get("quality_check", {})
                 state["escalation_info"] = {
-                    "reason": reason,
+                    "reason": qc.get("reason", reason),
+                    "confidence": qc.get("confidence", 0.0),
+                    "citation_score": qc.get("citation_score", 0.0),
+                    "hallucination_warnings": qc.get("hallucination_warnings", []),
+                    "critical_issues": qc.get("critical_issues", False),
                     "category": state.get("category"),
                     "priority": state.get("priority"),
                     "agent_notes": f"Escalated by QualityAgent: {reason}"
