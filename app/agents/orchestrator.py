@@ -10,6 +10,27 @@ from app.database import SessionLocal
 import time
 import json
 import logging
+import redis
+import os
+
+# Redis event publisher
+_redis_pub = None
+def _publish_ticket_event(ticket_id: int, status: str):
+    """Publish ticket update event to Redis Pub/Sub."""
+    global _redis_pub
+    if _redis_pub is None:
+        try:
+            _redis_pub = redis.from_url(os.getenv("REDIS_URL", "redis://redis:6379/0"))
+        except Exception:
+            return  # Redis not available, skip publishing
+    try:
+        _redis_pub.publish("ticket:events", json.dumps({
+            "type": "ticket_updated",
+            "ticket_id": ticket_id,
+            "status": status
+        }))
+    except Exception:
+        pass  # Silently fail on publish error
 
 logger = logging.getLogger(__name__)
 
@@ -136,6 +157,9 @@ class Orchestrator:
                 ticket.resolved_by = "agent" if state.get("status") == "resolved" else None
                 
                 db.commit()
+                
+                # Publish event for SSE
+                _publish_ticket_event(ticket.id, state["status"])
         except Exception as e:
             logger.error(f"Failed to update ticket {ticket_id}: {e}")
             db.rollback()

@@ -69,30 +69,46 @@ async def list_tickets(db: Session = Depends(get_db), status: Optional[str] = No
 
 @router.get("/tickets/stream")
 async def ticket_stream():
-    """SSE endpoint for real-time ticket updates."""
+    """SSE endpoint for real-time ticket updates via Redis Pub/Sub."""
     async def event_generator():
+        # Step 1: Send initial full ticket list
         from app.database import SessionLocal
         db = SessionLocal()
         try:
-            last_ticket_count = 0
+            tickets = db.query(Ticket).order_by(Ticket.created_at.desc(), Ticket.id.desc()).all()
+            tickets_data = [t.to_dict() for t in tickets]
+            yield f"event: tickets_updated\ndata: {json.dumps({'tickets': tickets_data})}\n\n"
+        finally:
+            db.close()
+        
+        # Step 2: Subscribe to Redis Pub/Sub for real-time updates
+        pubsub = redis_client.pubsub()
+        pubsub.subscribe("ticket:events")
+        
+        try:
             while True:
                 try:
-                    tickets = db.query(Ticket).order_by(Ticket.created_at.desc(), Ticket.id.desc()).all()
-                    current_count = len(tickets)
-                    
-                    if current_count != last_ticket_count:
-                        last_ticket_count = current_count
-                        tickets_data = [t.to_dict() for t in tickets]
-                        yield f"event: tickets_updated\ndata: {json.dumps({'tickets': tickets_data})}\n\n"
-                    
-                    await asyncio.sleep(2)
+                    # Use asyncio.to_thread to avoid blocking the event loop
+                    message = await asyncio.get_event_loop().run_in_executor(
+                        None, lambda: pubsub.get_message(timeout=1.0)
+                    )
+                    if message and message["type"] == "message":
+                        # Fetch full updated ticket list
+                        db2 = SessionLocal()
+                        try:
+                            tickets = db2.query(Ticket).order_by(Ticket.created_at.desc(), Ticket.id.desc()).all()
+                            tickets_data = [t.to_dict() for t in tickets]
+                            yield f"event: tickets_updated\ndata: {json.dumps({'tickets': tickets_data})}\n\n"
+                        finally:
+                            db2.close()
                 except asyncio.CancelledError:
                     break
                 except Exception as e:
                     print(f"SSE error: {e}")
                     await asyncio.sleep(2)
         finally:
-            db.close()
+            pubsub.unsubscribe()
+            pubsub.close()
     
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
@@ -123,6 +139,14 @@ async def resolve_ticket(ticket_id: int, body: TicketResolve, db: Session = Depe
     ticket.resolved_by = "admin"
     db.commit()
     db.refresh(ticket)
+    
+    # Publish event for SSE
+    redis_client.publish("ticket:events", json.dumps({
+        "type": "ticket_updated",
+        "ticket_id": ticket.id,
+        "status": "resolved"
+    }))
+    
     return ticket.to_dict()
 
 
