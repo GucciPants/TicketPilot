@@ -8,6 +8,9 @@ import json
 import os
 import asyncio
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 from app.models import Ticket, TicketStatus
 from app.database import get_db
@@ -104,7 +107,7 @@ async def ticket_stream():
                 except asyncio.CancelledError:
                     break
                 except Exception as e:
-                    print(f"SSE error: {e}")
+                    logger.error("SSE stream error", exc_info=True)
                     await asyncio.sleep(2)
         finally:
             pubsub.unsubscribe()

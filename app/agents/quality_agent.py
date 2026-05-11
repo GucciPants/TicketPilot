@@ -1,4 +1,7 @@
 """Quality Check Agent - Validates resolution with hallucination detection and citation checking."""
+import logging
+
+logger = logging.getLogger(__name__)
 from app.agents.base import BaseAgent
 from langchain.schema import HumanMessage
 import json
@@ -154,7 +157,7 @@ Consider:
             self.track_tokens(response)
             return result
         except Exception as e:
-            print(f"[QualityAgent] LLM check error: {e}")
+            logger.warning("QualityAgent LLM check failed", exc_info=True)
             return {"reason": "LLM check skipped", "hallucination_risk": "unknown", "actionable": True, "professional_tone": True}
 
     def _calculate_confidence(self, citation: dict, hallucination: dict, llm: dict) -> float:

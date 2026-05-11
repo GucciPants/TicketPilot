@@ -2,6 +2,9 @@
 from app.agents.base import BaseAgent
 from langchain.schema import HumanMessage
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 class RouterAgent(BaseAgent):
     """Classifies tickets to determine category, priority, and required context."""
@@ -44,7 +47,7 @@ Examples:
             self.track_tokens(response)
             
         except Exception as e:
-            print(f"[RouterAgent] Error: {e}")
+            logger.warning("RouterAgent", exc_info=True)
             state["category"] = "general"
             state["priority"] = "medium"
             state["requires_rag"] = True

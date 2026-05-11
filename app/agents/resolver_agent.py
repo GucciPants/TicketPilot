@@ -1,4 +1,7 @@
 """Resolver Agent - Generates ticket resolution using LLM and context."""
+import logging
+
+logger = logging.getLogger(__name__)
 from app.agents.base import BaseAgent
 from langchain.schema import HumanMessage
 import os
@@ -38,7 +41,7 @@ Keep the response friendly but professional."""
             self.track_tokens(response)
             
         except Exception as e:
-            print(f"[ResolverAgent] Error: {e}")
+            logger.error("Resolution generation failed", exc_info=True)
             state["resolution"] = f"Error: Unable to generate resolution - {str(e)}"
         
         return state

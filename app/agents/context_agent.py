@@ -1,6 +1,9 @@
 """Context Agent - Retrieves relevant documents from the knowledge base."""
 from app.agents.base import BaseAgent
 from app.rag.vector_store import VectorStore
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ContextAgent(BaseAgent):
     """Retrieves relevant documents from the RAG knowledge base."""
@@ -23,10 +26,10 @@ class ContextAgent(BaseAgent):
                 }
                 for r in results
             ]
-            print(f"[ContextAgent] Found {len(state['context_docs'])} relevant documents")
+            logger.info(f"RAG: {len(state['context_docs'])} documents retrieved")
             
         except Exception as e:
-            print(f"[ContextAgent] Error: {e}")
+            logger.error("RAG search failed", exc_info=True)
             state["context_docs"] = []
         
         return state
