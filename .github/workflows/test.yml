@@ -19,9 +19,14 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
-          python -m pip install --upgrade pip
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip wheel
           pip install -r requirements.txt
           pip install pytest pytest-asyncio
 
@@ -33,4 +38,4 @@ jobs:
         if: always()
         with:
           name: test-results
-          path: .pytest_cache/
+          path: test-results/
