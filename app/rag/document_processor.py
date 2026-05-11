@@ -5,8 +5,8 @@ from app.rag.embedding import get_embedding
 class DocumentProcessor:
     def __init__(self):
         self.vector_store = VectorStore()
-        self.chunk_size = 1000
-        self.chunk_overlap = 200
+        self.chunk_size = int(os.getenv("CHUNK_SIZE", "1000"))
+        self.chunk_overlap = int(os.getenv("CHUNK_OVERLAP", "200"))
     
     def process_text(self, text: str, doc_id: str, metadata: dict = None):
         """Process text by chunking and adding to vector store."""

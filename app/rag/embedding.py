@@ -1,7 +1,10 @@
 """Embedding generation using OpenRouter API."""
 import os
 import requests
+from functools import lru_cache
 
+
+@lru_cache(maxsize=256)
 def get_embedding(text: str):
     """Generate embedding using OpenRouter API."""
     api_key = os.getenv("OPENROUTER_API_KEY")
