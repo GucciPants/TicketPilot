@@ -1,13 +1,20 @@
 """Test configuration and fixtures."""
 import pytest
-import pytest_asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, PropertyMock
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.database import Base, get_db
 from app.main import app
+
+
+class MockLLMResponse:
+    """Mock response for LLM calls to avoid real API calls."""
+    def __init__(self, content: str):
+        self.content = content
+        self.usage_metadata = {"input_tokens": 10, "output_tokens": 20}
+
 
 # SQLite in-memory test database
 TEST_DATABASE_URL = "sqlite:///./test.db"
@@ -16,7 +23,6 @@ TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def override_get_db():
-    """Override the get_db dependency for testing."""
     db = TestSessionLocal()
     try:
         yield db
@@ -42,7 +48,7 @@ def mock_redis():
 
 
 @pytest.fixture
-def client(mock_redis):  # pylint: disable=redefined-outer-name,unused-argument
+def client(mock_redis):
     """FastAPI test client with overridden dependencies."""
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as test_client:
@@ -52,11 +58,47 @@ def client(mock_redis):  # pylint: disable=redefined-outer-name,unused-argument
 
 @pytest.fixture
 def sample_ticket_data():
-    """Sample ticket payload for tests."""
     return {"description": "I cannot log in to my account"}
 
 
 @pytest.fixture
-def long_ticket_data():
-    """Long ticket description for edge case testing."""
-    return {"description": "Help " * 500}
+def agent_state():
+    """Base state dictionary for agent pipeline tests."""
+    return {
+        "ticket_id": 1,
+        "description": "I cannot log in to my account",
+        "category": None,
+        "priority": None,
+        "context_docs": [],
+        "resolution": None,
+        "status": "open",
+        "errors": []
+    }
+
+
+@pytest.fixture
+def mock_llm():
+    """Patches BaseAgent.llm to return controlled responses during the test."""
+    patcher = patch("app.agents.base.BaseAgent.llm", new_callable=PropertyMock)
+    mock_prop = patcher.start()
+    mock_instance = MagicMock()
+    mock_instance.invoke.return_value = MockLLMResponse("default response")
+    mock_prop.return_value = mock_instance
+    yield lambda text: mock_instance.__dict__.update({'invoke': MagicMock(return_value=MockLLMResponse(text))}) or mock_instance
+    patcher.stop()
+
+
+@pytest.fixture
+def mock_qdrant():
+    """Mock QdrantClient to avoid real connections."""
+    with patch("app.rag.vector_store.QdrantClient") as mock_cls:
+        instance = mock_cls.return_value
+        instance.get_collections.return_value = MagicMock(collections=[])
+        instance.search.return_value = [
+            MagicMock(
+                payload={"doc_id": f"doc_{i}", "text": f"Sample document about login #{i}"},
+                score=0.9 - i * 0.1
+            )
+            for i in range(3)
+        ]
+        yield instance
