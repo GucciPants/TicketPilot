@@ -270,6 +270,30 @@ The Quality Agent evaluates every resolution before it's finalized:
 
 Quality data is stored in `tickets.escalation_info` and visible on the admin page.
 
+## CI/CD
+
+GitHub Actions automatically runs on every push:
+
+| Workflow | Trigger | Action |
+|---|---|---|
+| **Tests** | Every push + PR to main | Runs 29 pytest tests (API + agents) |
+| **Docker Build** | Push to main | Builds and pushes `ticketpilot-api` and `ticketpilot-worker` images to GitHub Container Registry |
+
+### Running Tests
+
+The test suite uses `pytest` with mock fixtures, no external services needed:
+```bash
+pip install -r requirements.txt
+pip install pytest pytest-asyncio
+python -m pytest tests/ -v
+```
+
+**Test structure:** 29 tests total:
+- **20 API tests** — health, tickets CRUD, knowledge base, metrics, frontend
+- **9 Agent tests** — Router classification, Context retrieval, Quality validation
+
+All external dependencies (LLM, Redis, Qdrant, PostgreSQL) are mocked.
+
 ## Roadmap
 
 - [x] Project setup and Docker stack
@@ -285,8 +309,10 @@ Quality data is stored in `tickets.escalation_info` and visible on the admin pag
 - [x] Frontend dashboard (Tailwind + Alpine.js)
 - [x] True SSE with Redis Pub/Sub (zero-latency updates)
 - [x] Escalation workflow with human-in-the-loop (`/admin` page)
-- [x] Unit & integration tests (20 pytest tests)
+- [x] Unit & integration tests (29 pytest tests: 20 API + 9 agent)
 - [x] Evaluation framework (25 gold tickets, ROUGE-L, keyword coverage)
+- [x] CI/CD with GitHub Actions (tests + Docker build)
+- [x] Consistent logging across all modules
 
 > **All roadmap items completed!** 🎉
 
