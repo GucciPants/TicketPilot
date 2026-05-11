@@ -6,9 +6,14 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -22,15 +27,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip wheel setuptools
-          pip install --only-binary :all: -r requirements.txt 2>&1 || pip install -r requirements.txt 2>&1
+          pip install -r requirements.txt
           pip install pytest pytest-asyncio
 
       - name: Run tests
-        run: python -m pytest tests/ -v --tb=short 2>&1
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results
-          path: test-results/
+        run: python -m pytest tests/ -v --tb=short
