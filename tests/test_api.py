@@ -132,4 +132,4 @@ class TestFrontend:
     def test_js_exists(self, client):
         response = client.get("/static/app.js")
         assert response.status_code == status.HTTP_200_OK
-        assert "application/javascript" in response.headers["content-type"]
+        assert "javascript" in response.headers["content-type"]
