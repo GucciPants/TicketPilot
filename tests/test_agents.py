@@ -35,7 +35,7 @@ class TestContextAgent:
         assert len(state['context_docs']) == 3
 
     def test_empty(self, mock_qdrant, agent_state):
-        mock_qdrant.search.return_value = []
+        mock_qdrant.return_value = []
         state = ContextAgent().run(agent_state)
         assert state['context_docs'] == []
 

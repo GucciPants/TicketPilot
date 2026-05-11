@@ -95,15 +95,11 @@ def mock_llm():
 
 @pytest.fixture
 def mock_qdrant():
-    """Mock QdrantClient to avoid real connections."""
-    with patch("app.rag.vector_store.QdrantClient") as mock_cls:
-        instance = mock_cls.return_value
-        instance.get_collections.return_value = MagicMock(collections=[])
-        instance.search.return_value = [
-            MagicMock(
-                payload={"doc_id": f"doc_{i}", "text": f"Sample document about login #{i}"},
-                score=0.9 - i * 0.1
-            )
-            for i in range(3)
-        ]
-        yield instance
+    """Mock VectorStore.search and QdrantClient to avoid real connections."""
+    with patch("app.rag.vector_store.VectorStore.search") as mock_search:
+        with patch("app.rag.vector_store.QdrantClient"):
+            mock_search.return_value = [
+                {"doc_id": f"doc_{i}", "text": f"Sample document about login #{i}", "score": 0.9 - i * 0.1}
+                for i in range(3)
+            ]
+            yield mock_search
