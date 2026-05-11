@@ -47,7 +47,7 @@ Examples:
             self.track_tokens(response)
             
         except Exception as e:
-            logger.warning("RouterAgent", exc_info=True)
+            logger.warning("Route classification failed: %s", str(e))
             state["category"] = "general"
             state["priority"] = "medium"
             state["requires_rag"] = True

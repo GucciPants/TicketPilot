@@ -2,7 +2,10 @@ from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams, PointStruct
 import os
 import hashlib
+import logging
 from app.rag.embedding import get_embedding
+
+logger = logging.getLogger(__name__)
 
 class VectorStore:
     def __init__(self):
@@ -22,9 +25,9 @@ class VectorStore:
                     collection_name=self.collection_name,
                     vectors_config=VectorParams(size=384, distance=Distance.COSINE)
                 )
-                print(f"Created collection: {self.collection_name}")
+                logger.info("Created collection: %s", self.collection_name)
         except Exception as e:
-            print(f"Error initializing collection: {e}")
+            logger.error("Failed to initialize collection: %s", str(e))
     
     def add_document(self, doc_id: str, text: str, metadata: dict = None):
         """Add a document to the vector store."""
@@ -45,7 +48,7 @@ class VectorStore:
             )
             return True
         except Exception as e:
-            print(f"Error adding document: {e}")
+            logger.error("Failed to add document %s: %s", doc_id, str(e))
             return False
     
     def search(self, query: str, limit: int = 3):
@@ -66,5 +69,5 @@ class VectorStore:
                 for r in results
             ]
         except Exception as e:
-            print(f"Error searching: {e}")
+            logger.error("Vector search failed: %s", str(e))
             return []
