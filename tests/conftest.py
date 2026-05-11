@@ -1,13 +1,18 @@
 """Test configuration and fixtures."""
+import os
 import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+# Force SQLite for tests BEFORE importing app modules
+os.environ["DATABASE_URL"] = "sqlite:///./test.db"
+os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+os.environ["QDRANT_URL"] = "http://localhost:6333"
+
 from app.database import Base, get_db
 from app.main import app
-
 
 class MockLLMResponse:
     """Mock response for LLM calls to avoid real API calls."""
