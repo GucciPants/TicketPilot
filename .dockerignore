@@ -18,5 +18,5 @@ dist/
 build/
 n8n/
 tests/
-frontend/
+# frontend/   (included in Docker image for production)
 docker-compose.yml

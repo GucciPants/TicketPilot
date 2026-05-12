@@ -34,7 +34,7 @@ class VectorStore:
         try:
             embedding = get_embedding(text)
             point = PointStruct(
-                id=abs(hashlib.md5(doc_id.encode()) % (2**31)),
+                id=abs(int(hashlib.md5(doc_id.encode()).hexdigest(), 16) % (2**31)),
                 vector=embedding,
                 payload={
                     "doc_id": doc_id,
