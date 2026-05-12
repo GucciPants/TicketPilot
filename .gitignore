@@ -62,6 +62,10 @@ appendonly.aof
 # Prometheus data (Docker volume handles it)
 # prometheus_data/
 
+# Subagent outputs
+context.md
+research.md
+
 # Test coverage
 .coverage
 htmlcov/
