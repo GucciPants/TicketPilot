@@ -140,7 +140,7 @@
                                 <p x-show="t.status === 'open'" class="text-xs text-slate-400 mt-2">⏳ Processing...</p>
                                 <p class="text-xs text-slate-400 mt-2" x-text="'Created: ' + t.created_at"></p>
                             </div>
-                            <button x-show="t.status === 'escalated'" @click="openAdmin(t.id)" class="shrink-0 text-xs bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg font-medium transition">Resolve</button>
+                            <button x-show="t.status === 'escalated'" @click="openAdmin(t.id)" class="shrink-0 text-xs font-medium text-blue-600 hover:text-blue-800 underline underline-offset-2 transition">Review →</button>
                         </div>
                     </div>
                 </template>

@@ -41,7 +41,7 @@ class QualityAgent(BaseAgent):
 
         # Step 4: Combined confidence score
         confidence = self._calculate_confidence(citation_check, hallucination_check, llm_check)
-        passed = confidence >= 0.6 and not hallucination_check["critical_issues"]
+        passed = confidence >= 0.4 and not hallucination_check["critical_issues"]
         suggest_escalation = not passed or hallucination_check["critical_issues"]
 
         state["quality_check"] = {
