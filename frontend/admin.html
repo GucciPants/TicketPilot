@@ -28,16 +28,32 @@
                 <p class="text-xs text-slate-400">Admin Console</p>
             </div>
         </div>
-        <nav class="flex flex-col gap-1">
+        <nav class="flex flex-col gap-1 flex-1">
             <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 Dashboard
             </a>
             <a href="/admin" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-red-50 text-red-700 font-medium">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                Admin
+                Escalated
+            </a>
+            <a href="#users" @click.prevent="tab = 'users'" :class="tab === 'users' ? 'bg-slate-100 text-slate-800 font-medium' : 'text-slate-600 hover:bg-slate-50'" class="flex items-center gap-3 px-3 py-2.5 rounded-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>
+                Users
             </a>
         </nav>
+
+        <!-- User info & logout -->
+        <div x-show="user" class="border-t border-slate-100 pt-4">
+            <div class="flex items-center gap-2 px-3 py-2">
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-xs" x-text="user.email.charAt(0).toUpperCase()"></div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium truncate" x-text="user.email"></p>
+                    <p class="text-xs text-slate-400 capitalize" x-text="user.role"></p>
+                </div>
+            </div>
+            <button @click="logout" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition">Sign out</button>
+        </div>
     </aside>
 
     <!-- Main -->
@@ -49,118 +65,274 @@
                 <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-sm">TP</div>
                 <h1 class="font-bold">Admin</h1>
             </div>
-            <a href="/" class="text-blue-600 text-sm font-medium">← Dashboard</a>
-        </div>
-
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h2 class="text-2xl font-bold">🚨 Escalated Tickets</h2>
-                <p class="text-sm text-slate-500 mt-1" x-text="'Human review needed: ' + tickets.length + ' ticket(s)'"></p>
-            </div>
             <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                <span class="text-xs text-slate-400">Auto-refresh 10s</span>
+                <button @click="logout" x-show="user" class="text-red-600 text-sm font-medium">Sign out</button>
+                <a href="/" class="text-blue-600 text-sm font-medium">← Dashboard</a>
             </div>
         </div>
 
-        <!-- Empty state -->
-        <div x-show="!tickets.length" class="bg-white rounded-xl border border-slate-200 p-12 text-center">
-            <p class="text-4xl mb-3">✅</p>
-            <p class="text-slate-500 font-medium">No escalated tickets. All resolved!</p>
-        </div>
-
-        <!-- Ticket list -->
-        <div class="space-y-4">
-            <template x-for="t in tickets" :key="t.id">
-                <div class="bg-white rounded-xl border border-red-200 p-5">
-                    <div class="flex items-start justify-between gap-3 mb-3">
-                        <div>
-                            <h3 class="font-bold">Ticket #<span x-text="t.id"></span> 
-                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700">escalated</span>
-                            </h3>
-                            <p class="text-sm mt-1" x-text="t.description"></p>
-                        </div>
-                    </div>
-                    
-                    <!-- Meta badges -->
-                    <div class="flex flex-wrap gap-2 mb-3" x-show="Object.keys(t.escalation_info || {}).length">
-                        <template x-for="(val, key) in t.escalation_info">
-                            <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-md" x-show="['reason','category','priority'].includes(key)" x-text="key + ': ' + val"></span>
-                        </template>
-                    </div>
-
-                    <!-- AI resolution collapsible -->
-                    <details x-show="t.resolution" class="mb-3">
-                        <summary class="text-sm text-blue-600 hover:text-blue-700 cursor-pointer font-medium">📄 View AI resolution (reference)</summary>
-                        <div class="resolution-content mt-2" x-html="renderMD(t.resolution)"></div>
-                    </details>
-
-                    <!-- Resolve form -->
-                    <form @submit.prevent="resolveTicket(t.id)" class="border-t border-slate-100 pt-4">
-                        <label class="font-medium text-sm block mb-2">✏️ Your Resolution:</label>
-                        <textarea x-model="resolutions[t.id]" rows="3" placeholder="Enter resolution..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none" required></textarea>
-                        <div class="flex items-center gap-2 mt-2">
-                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition" 
-                                    :disabled="resolving === t.id">
-                                <span x-show="resolving !== t.id">✅ Mark as Resolved</span>
-                                <span x-show="resolving === t.id">Resolving...</span>
-                            </button>
-                            <span x-show="resolvedId === t.id" class="text-sm text-emerald-600">✅ Resolved!</span>
-                        </div>
-                    </form>
+        <!-- === Escalated Tickets Tab === -->
+        <div x-show="tab === 'escalated'">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold">🚨 Escalated Tickets</h2>
+                    <p class="text-sm text-slate-500 mt-1" x-text="'Human review needed: ' + tickets.length + ' ticket(s)'"></p>
                 </div>
-            </template>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span class="text-xs text-slate-400">Auto-refresh 10s</span>
+                </div>
+            </div>
+
+            <div x-show="!tickets.length" class="bg-white rounded-xl border border-slate-200 p-12 text-center">
+                <p class="text-4xl mb-3">✅</p>
+                <p class="text-slate-500 font-medium">No escalated tickets. All resolved!</p>
+            </div>
+
+            <div class="space-y-4">
+                <template x-for="t in tickets" :key="t.id">
+                    <div class="bg-white rounded-xl border border-red-200 p-5">
+                        <div class="flex items-start justify-between gap-3 mb-3">
+                            <div>
+                                <h3 class="font-bold">Ticket #<span x-text="t.id"></span>
+                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700">escalated</span>
+                                </h3>
+                                <p class="text-sm mt-1" x-text="t.description"></p>
+                                <p x-show="t.user_email" class="text-xs text-slate-400 mt-1" x-text="'by ' + t.user_email"></p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 mb-3" x-show="Object.keys(t.escalation_info || {}).length">
+                            <template x-for="(val, key) in t.escalation_info">
+                                <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-md" x-show="['reason','category','priority'].includes(key)" x-text="key + ': ' + val"></span>
+                            </template>
+                        </div>
+
+                        <details x-show="t.resolution" class="mb-3">
+                            <summary class="text-sm text-blue-600 hover:text-blue-700 cursor-pointer font-medium">📄 View AI resolution (reference)</summary>
+                            <div class="resolution-content mt-2" x-html="renderMD(t.resolution)"></div>
+                        </details>
+
+                        <form @submit.prevent="resolveTicket(t.id)" class="border-t border-slate-100 pt-4">
+                            <label class="font-medium text-sm block mb-2">✏️ Your Resolution:</label>
+                            <textarea x-model="resolutions[t.id]" rows="3" placeholder="Enter resolution..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none" required></textarea>
+                            <div class="flex items-center gap-2 mt-2">
+                                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+                                        :disabled="resolving === t.id">
+                                    <span x-show="resolving !== t.id">✅ Mark as Resolved</span>
+                                    <span x-show="resolving === t.id">Resolving...</span>
+                                </button>
+                                <span x-show="resolvedId === t.id" class="text-sm text-emerald-600">✅ Resolved!</span>
+                            </div>
+                        </form>
+                    </div>
+                </template>
+            </div>
         </div>
+
+        <!-- === Users Tab === -->
+        <div x-show="tab === 'users'">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold">👥 Users</h2>
+                    <p class="text-sm text-slate-500 mt-1" x-text="users.length + ' user(s)'"></p>
+                </div>
+                <button @click="loadUsers" class="text-sm text-blue-600 hover:text-blue-700 font-medium">Refresh</button>
+            </div>
+
+            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="text-left px-4 py-3 font-medium text-slate-600">ID</th>
+                            <th class="text-left px-4 py-3 font-medium text-slate-600">Email</th>
+                            <th class="text-left px-4 py-3 font-medium text-slate-600">Role</th>
+                            <th class="text-left px-4 py-3 font-medium text-slate-600">Active</th>
+                            <th class="text-left px-4 py-3 font-medium text-slate-600">Created</th>
+                            <th class="text-left px-4 py-3 font-medium text-slate-600">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <template x-for="u in users" :key="u.id">
+                            <tr>
+                                <td class="px-4 py-3 text-slate-500 font-mono" x-text="u.id"></td>
+                                <td class="px-4 py-3 font-medium" x-text="u.email"></td>
+                                <td class="px-4 py-3">
+                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                          :class="roleClass(u.role)" x-text="u.role"></span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span x-text="u.is_active ? '✅' : '❌'"></span>
+                                </td>
+                                <td class="px-4 py-3 text-slate-500 text-xs" x-text="u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'"></td>
+                                <td class="px-4 py-3">
+                                    <select x-show="user && user.id !== u.id" x-model="u.role" @change="changeRole(u.id, u.role)"
+                                            class="text-xs border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none">
+                                        <option value="customer">customer</option>
+                                        <option value="agent">agent</option>
+                                        <option value="admin">admin</option>
+                                    </select>
+                                    <span x-show="user && user.id === u.id" class="text-xs text-slate-400">(you)</span>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+            <p x-show="roleError" class="text-sm text-red-600 mt-3" x-text="roleError"></p>
+            <p x-show="roleSuccess" class="text-sm text-emerald-600 mt-3" x-text="roleSuccess"></p>
+        </div>
+
     </main>
 </div>
 
 <script>
 function admin() {
     return {
+        user: null,
+        tab: 'escalated',
         tickets: [],
         resolutions: {},
         resolving: null,
         resolvedId: null,
         timer: null,
 
+        // Users
+        users: [],
+        roleError: '',
+        roleSuccess: '',
+
         init() {
-            this.load();
-            this.timer = setInterval(() => this.load(), 10000);
+            const token = this.getToken();
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+            this.fetchUser().then(() => {
+                if (this.user.role === 'customer') {
+                    window.location.href = '/';
+                    return;
+                }
+                this.load();
+                this.loadUsers();
+                this.timer = setInterval(() => this.load(), 10000);
+            }).catch(() => {
+                this.clearToken();
+                window.location.href = '/';
+            });
         },
+
+        // ── Auth ─────────────────────────────────────────
+
+        getToken() {
+            const fromUrl = new URLSearchParams(window.location.search).get('token');
+            if (fromUrl) {
+                localStorage.setItem('tp_token', fromUrl);
+                // Clean URL without reload
+                history.replaceState({}, '', '/admin');
+            }
+            return localStorage.getItem('tp_token');
+        },
+
+        clearToken() {
+            localStorage.removeItem('tp_token');
+            this.user = null;
+        },
+
+        authHeaders() {
+            const token = this.getToken();
+            return token ? { 'Authorization': 'Bearer ' + token } : {};
+        },
+
+        async fetchUser() {
+            const res = await fetch('/api/v1/auth/me', { headers: this.authHeaders() });
+            if (res.ok) {
+                this.user = await res.json();
+            } else {
+                throw new Error('Not authenticated');
+            }
+        },
+
+        logout() {
+            this.clearToken();
+            window.location.href = '/';
+        },
+
+        // ── Escalated tickets ────────────────────────────
 
         renderMD(text) {
             try { return DOMPurify.sanitize(marked.parse(text || '')); } catch(e) { return ''; }
         },
 
+        roleClass(role) {
+            return {
+                admin: 'bg-purple-50 text-purple-700',
+                agent: 'bg-blue-50 text-blue-700',
+                customer: 'bg-slate-50 text-slate-600'
+            }[role] || 'bg-slate-50 text-slate-600';
+        },
+
         async load() {
             try {
-                const r = await fetch('/api/v1/tickets?status=escalated');
-                if (!r.ok) throw new Error('API Error ' + r.status);
-                this.tickets = (await r.json()).tickets || [];
+                const res = await fetch('/api/v1/tickets?status=escalated', { headers: this.authHeaders() });
+                if (!res.ok) throw new Error('API Error ' + res.status);
+                this.tickets = (await res.json()).tickets || [];
             } catch(e) { console.warn('Load error', e); }
         },
 
         async resolveTicket(id) {
             this.resolving = id;
             try {
-                const r = await fetch('/api/v1/tickets/' + id + '/resolve', {
+                const res = await fetch('/api/v1/tickets/' + id + '/resolve', {
                     method: 'PATCH',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({resolution: this.resolutions[id] || ''})
+                    headers: { 'Content-Type': 'application/json', ...this.authHeaders() },
+                    body: JSON.stringify({ resolution: this.resolutions[id] || '' })
                 });
-                if (r.ok) {
+                if (res.ok) {
                     this.resolvedId = id;
                     setTimeout(() => { this.resolvedId = null; this.load(); }, 1500);
                 } else {
-                    const err = await r.json();
+                    const err = await res.json();
                     alert('Error: ' + (err.detail || 'Unknown'));
                 }
             } catch(e) { alert('Error: ' + e.message); }
             finally { this.resolving = null; }
+        },
+
+        // ── User management ──────────────────────────────
+
+        async loadUsers() {
+            try {
+                const res = await fetch('/api/v1/auth/admin/users', { headers: this.authHeaders() });
+                if (res.ok) {
+                    this.users = await res.json();
+                }
+            } catch(e) { console.warn('Load users error', e); }
+        },
+
+        async changeRole(userId, newRole) {
+            this.roleError = '';
+            this.roleSuccess = '';
+            try {
+                const res = await fetch('/api/v1/auth/admin/users/' + userId + '/role', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', ...this.authHeaders() },
+                    body: JSON.stringify({ role: newRole })
+                });
+                if (res.ok) {
+                    this.roleSuccess = '✅ Role updated';
+                    setTimeout(() => this.roleSuccess = '', 3000);
+                } else {
+                    const err = await res.json();
+                    this.roleError = '❌ ' + (err.detail || 'Failed to update role');
+                }
+            } catch(e) {
+                this.roleError = '❌ Network error';
+            }
         }
     }
 }
 </script>
 </body>
+</html>
 </html>
