@@ -3,8 +3,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router
-from app.database import Base, engine
-from app.models import Ticket
+from app.auth.routes import auth_router
+from app.database import Base, engine, SessionLocal
+from app.models import Ticket, User, UserRole
+from app.auth.utils import hash_password
 from app.middleware.rate_limit import RateLimitMiddleware
 import os
 import logging
@@ -15,13 +17,18 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
 
+logger = logging.getLogger(__name__)
+
 # Create database tables
 Base.metadata.create_all(bind=engine)
+
+# Seed default admin user if no users exist
+_seed_default_admin()
 
 app = FastAPI(
     title="TicketPilot API",
     description="AI-powered support ticket resolution system",
-    version="0.1.0"
+    version="0.2.0"
 )
 
 # Rate limiting middleware
@@ -51,3 +58,23 @@ async def read_admin():
 
 # Include API routes
 app.include_router(router, prefix="/api/v1")
+app.include_router(auth_router, prefix="/api/v1/auth")
+
+
+def _seed_default_admin():
+    """Create a default admin user on first startup if no users exist."""
+    try:
+        db = SessionLocal()
+        if not db.query(User).first():
+            admin = User(
+                email="admin@ticketpilot.app",
+                hashed_password=hash_password("admin123"),
+                role=UserRole.ADMIN,
+                is_active=True,
+            )
+            db.add(admin)
+            db.commit()
+            logger.info("Default admin created: admin@ticketpilot.app / admin123")
+        db.close()
+    except Exception as e:
+        logger.warning("Failed to seed default admin (non-fatal): %s", str(e))

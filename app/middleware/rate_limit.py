@@ -15,6 +15,8 @@ RATE_LIMITS = {
     "/api/v1/documents/search": {"GET": {"limit": 30, "window": 60}}, # 30 GET/minute
     "/api/v1/tickets/stream": {"GET": {"limit": 10, "window": 60}},  # 10 connections/minute
     "/api/v1/tickets/": {"PATCH": {"limit": 20, "window": 60}},  # 20 PATCH/min (matches /api/v1/tickets/{id}/resolve)
+    "/api/v1/auth/register": {"POST": {"limit": 5, "window": 60}},   # 5 registrations/minute
+    "/api/v1/auth/login": {"POST": {"limit": 20, "window": 60}},     # 20 login attempts/minute
 }
 
 DEFAULT_LIMIT = 60  # requests per window for unmached endpoints
