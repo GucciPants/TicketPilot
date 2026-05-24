@@ -13,6 +13,8 @@ os.environ["QDRANT_URL"] = "http://localhost:6333"
 
 from app.database import Base, get_db
 from app.main import app
+from app.models import User, UserRole
+from app.auth.utils import hash_password, create_access_token
 
 class MockLLMResponse:
     """Mock response for LLM calls to avoid real API calls."""
@@ -79,6 +81,54 @@ def agent_state():
         "status": "open",
         "errors": []
     }
+
+
+@pytest.fixture
+def test_user():
+    """Create a test admin user in the database. Returns the User object."""
+    db = TestSessionLocal()
+    user = User(
+        email="admin@test.local",
+        hashed_password=hash_password("test123"),
+        role=UserRole.ADMIN,
+        is_active=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    db.close()
+    return user
+
+
+@pytest.fixture
+def auth_headers(test_user):
+    """Return Authorization headers for the test admin user."""
+    token = create_access_token({"sub": str(test_user.id)})
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def customer_user():
+    """Create a test customer user. Returns the User object."""
+    db = TestSessionLocal()
+    user = User(
+        email="customer@test.local",
+        hashed_password=hash_password("test123"),
+        role=UserRole.CUSTOMER,
+        is_active=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    db.close()
+    return user
+
+
+@pytest.fixture
+def customer_headers(customer_user):
+    """Return Authorization headers for the test customer user."""
+    token = create_access_token({"sub": str(customer_user.id)})
+    return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture

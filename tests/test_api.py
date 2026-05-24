@@ -91,8 +91,8 @@ class TestTickets:
 class TestKnowledgeBase:
     """Knowledge base endpoint tests."""
 
-    def test_ingest_knowledge_base(self, client):
-        response = client.post("/api/v1/knowledge-base/ingest")
+    def test_ingest_knowledge_base(self, client, auth_headers):
+        response = client.post("/api/v1/knowledge-base/ingest", headers=auth_headers)
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["status"] == "success"
