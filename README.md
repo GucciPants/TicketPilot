@@ -296,6 +296,8 @@ All external dependencies (LLM, Redis, Qdrant, PostgreSQL) are mocked.
 
 ## Roadmap
 
+### Phase 1 — Core Pipeline ✅
+
 - [x] Project setup and Docker stack
 - [x] PostgreSQL persistence (SQLAlchemy)
 - [x] REST API (tickets, documents, metrics)
@@ -314,7 +316,27 @@ All external dependencies (LLM, Redis, Qdrant, PostgreSQL) are mocked.
 - [x] CI/CD with GitHub Actions (tests + Docker build)
 - [x] Consistent logging across all modules
 
-> **All roadmap items completed!** 🎉
+### Phase 2 — User Management 🔜
+
+- [ ] User model & PostgreSQL auth tables (email, password hash, role)
+- [ ] Registration & login endpoints (JWT-based auth)
+- [ ] Role-based access control: `admin`, `agent`, `customer`
+- [ ] Auth middleware — protect all API endpoints except login/register
+- [ ] Ticket ownership — customers see only their tickets, agents see all
+- [ ] Authenticated SSE stream (user-specific ticket events)
+- [ ] Login UI, registration form, session management in frontend
+- [ ] Admin-user management (create agents, list users)
+- [ ] Rate limit tiers per role (higher limits for agents)
+- [ ] Tests for auth flow, RBAC, token expiry
+
+### Phase 3 — Polish & Scale 🧹
+
+- [ ] Dependency injection refactor (constructor injection for all agents)
+- [ ] LangChain version bump + optional LangGraph migration
+- [ ] Qdrant hybrid search (dense + sparse for better retrieval)
+- [ ] Graceful worker shutdown + dead-letter queue
+- [ ] CI reliability improvements
+- [ ] Production-grade Docker health checks
 
 ## License
 
