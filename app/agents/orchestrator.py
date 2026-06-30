@@ -14,6 +14,7 @@ import redis
 import os
 import threading
 import atexit
+import warnings
 
 # Redis event publisher — thread-safe singleton
 _redis_pub = None
@@ -56,6 +57,25 @@ def _publish_ticket_event(ticket_id: int, status: str):
     except Exception as e:
         logger.warning("Failed to publish ticket event: %s", e)
 
+
+def publish_ticket_to_stream(ticket_id: int, description: str):
+    """Publish a new ticket event to the async Redis Stream pipeline.
+
+    This is the thin facade that replaces the synchronous Orchestrator.process_ticket().
+    The async pipeline agents will consume this event and process it concurrently.
+    """
+    import json as _json
+    try:
+        r = redis.from_url(os.getenv("REDIS_URL", "redis://redis:6379/0"))
+        r.xadd("ticket:new", {"data": _json.dumps({
+            "ticket_id": ticket_id,
+            "description": description
+        })}, maxlen=10000)
+        logger.info("Published ticket %d to async stream", ticket_id)
+    except Exception as e:
+        logger.warning("Failed to publish to async stream: %s", e)
+
+
 logger = logging.getLogger(__name__)
 
 class Orchestrator:
@@ -69,14 +89,20 @@ class Orchestrator:
 
     def process_ticket(self, ticket_id: int, description: str) -> str:
         """Run the full agent pipeline for a ticket.
-        
+
+        Deprecated: Use publish_ticket_to_stream() for the async event-driven pipeline.
+
         Args:
             ticket_id: The ticket ID
             description: The ticket description
-        
+
         Returns:
             Resolution text
         """
+        warnings.warn(
+            "Orchestrator.process_ticket() is deprecated. Use publish_ticket_to_stream() for async pipeline.",
+            DeprecationWarning, stacklevel=2
+        )
         start_time = time.time()
         
         # Initialize shared pipeline state

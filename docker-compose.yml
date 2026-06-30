@@ -66,6 +66,23 @@ services:
       - qdrant
     volumes:
       - ./app:/app/app
+    profiles:
+      - legacy
+
+  async-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.async_worker
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - WORKER_CONCURRENCY=${WORKER_CONCURRENCY:-4}
+    depends_on:
+      - redis
+      - qdrant
+    volumes:
+      - ./app:/app/app
 
   prometheus:
     image: prom/prometheus:latest

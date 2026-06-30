@@ -16,6 +16,7 @@ from app.models import Ticket, TicketStatus, User
 from app.database import get_db, SessionLocal
 from app.rag.document_processor import DocumentProcessor
 from app.metrics import ticket_created_counter, metrics_endpoint
+from app.agents.orchestrator import publish_ticket_to_stream
 from app.auth.dependencies import get_optional_user, require_role
 from app.auth.utils import decode_access_token
 
@@ -95,6 +96,9 @@ async def create_ticket(
         "description": ticket.description,
     }
     _get_redis_client().lpush("ticket_queue", json.dumps(ticket_payload))
+
+    # Also publish to the async event-driven pipeline
+    publish_ticket_to_stream(ticket.id, ticket.description)
 
     return ticket.to_dict()
 

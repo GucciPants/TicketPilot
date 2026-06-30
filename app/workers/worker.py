@@ -53,7 +53,16 @@ def _process_loop(worker_id: int):
 
 
 def main():
-    """Start the worker pool with the configured number of processes."""
+    """Start the worker pool with the configured number of processes.
+
+    Deprecated: Use async_worker.py for the event-driven pipeline.
+    """
+    import warnings
+    warnings.warn(
+        "sync worker.py is deprecated. Use async pipeline: python -m app.workers.async_worker",
+        DeprecationWarning, stacklevel=2
+    )
+    print("WARNING: sync worker is deprecated. Use async worker instead.")
     print(f"Starting {WORKER_CONCURRENCY} worker processes...")
     processes = []
 
