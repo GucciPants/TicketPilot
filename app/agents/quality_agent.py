@@ -84,27 +84,15 @@ class QualityAgent(BaseAgent):
         }
 
     def _detect_hallucinations(self, resolution: str, context_docs: list, description: str) -> dict:
-        """Detect potential hallucinations by checking unsupported claims."""
+        """Detect hallucinations using LLM-based claim extraction and verification.
+
+        Uses an LLM to extract factual claims from the resolution and check each
+        against the knowledge base context. Falls back to word count heuristics.
+        """
         warnings = []
         critical = False
 
-        # Check 1: Does the response introduce specific numbers/amounts not in context?
-        amounts = re.findall(r'\$\d+(?:[,.]\d+)?|\d+\s*(?:dollars|USD|eur)', resolution, re.IGNORECASE)
-        if amounts and context_docs:
-            context_text = " ".join(d.get("text", "") for d in context_docs)
-            for amount in amounts:
-                if amount not in context_text:
-                    warnings.append(f"Specific amount '{amount}' not found in knowledge base")
-
-        # Check 2: Does it reference specific tools/services not mentioned?
-        tools = re.findall(r'(?i)(cPanel|Plesk|WordPress|Apache|Nginx|PHP\s*\d+\.?\d*)', resolution)
-        if tools and context_docs:
-            context_text = " ".join(d.get("text", "") for d in context_docs)
-            for tool in tools:
-                if tool.lower() not in context_text.lower() and tool.lower() not in description.lower():
-                    warnings.append(f"Tool/service '{tool}' mentioned but not in context")
-
-        # Check 3: Length heuristic — suspiciously short/empty?
+        # Step 1: Length heuristic — always run as secondary check
         word_count = len(resolution.split())
         if word_count < 15:
             warnings.append(f"Response too short ({word_count} words)")
@@ -112,11 +100,80 @@ class QualityAgent(BaseAgent):
         elif word_count > 1000:
             warnings.append(f"Response unusually long ({word_count} words)")
 
+        # Step 2: LLM-based fact-checking (skip if no context to verify against)
+        if context_docs:
+            try:
+                llm_warnings = self._llm_fact_check(resolution, context_docs)
+                warnings.extend(llm_warnings)
+                if len(llm_warnings) >= 3:
+                    critical = True
+            except Exception as e:
+                logger.warning("LLM fact-check failed, falling back to regex heuristics: %s", e)
+                # Fallback: regex-based heuristics
+                context_text = " ".join(d.get("text", "") for d in context_docs)
+
+                amounts = re.findall(
+                    r'\$\d+(?:[,.]\d+)?|\d+\s*(?:dollars|USD|eur)',
+                    resolution, re.IGNORECASE
+                )
+                for amount in amounts:
+                    if amount not in context_text:
+                        warnings.append(f"Specific amount '{amount}' not found in knowledge base")
+
+                tools = re.findall(
+                    r'(?i)(cPanel|Plesk|WordPress|Apache|Nginx|PHP\s*\d+\.?\d*)',
+                    resolution
+                )
+                for tool in tools:
+                    if tool.lower() not in context_text.lower() and tool.lower() not in description.lower():
+                        warnings.append(f"Tool/service '{tool}' mentioned but not in context")
+
+                if len([w for w in warnings if w not in [f"Response too short ({word_count} words)",
+                                                          f"Response unusually long ({word_count} words)"]]) >= 3:
+                    critical = True
+
         return {
             "warnings": warnings,
             "critical_issues": critical,
             "count": len(warnings)
         }
+
+    def _llm_fact_check(self, resolution: str, context_docs: list) -> list:
+        """Use LLM to extract and verify factual claims against context."""
+        context_text = "\n\n".join(
+            f"Document {i+1}: {d.get('text', '')[:500]}"
+            for i, d in enumerate(context_docs[:3])
+        )
+
+        prompt = f"""You are a fact-checking agent. Compare the support response against the knowledge base.
+
+Knowledge base:
+{context_text[:2000]}
+
+Response:
+{resolution[:1500]}
+
+List EVERY factual claim in the response that is NOT supported by the knowledge base.
+Return ONLY a JSON array of unsupported claims, or an empty array [] if all claims are supported.
+Each item in the array must be a JSON object with:
+- "claim": the exact text of the unsupported claim
+- "reason": brief explanation of why it is unsupported
+
+Be thorough but fair. If the response contains general advice not requiring KB support,
+do not flag it. Only flag specific factual statements that should be verifiable."""
+
+        try:
+            content = self.invoke_with_retry(prompt)
+            if content.startswith("```"):
+                content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+
+            claims = json.loads(content)
+            if isinstance(claims, list):
+                return [f"Unsupported claim: {c['claim']} — {c['reason']}" for c in claims]
+            return []
+        except Exception as e:
+            logger.warning("LLM fact-check parsing failed: %s", e)
+            raise  # Re-raise so caller can fall back
 
     def _llm_quality_check(self, description: str, resolution: str, context_docs: list) -> dict:
         """Use LLM to assess overall quality."""
@@ -158,21 +215,35 @@ Consider:
             return {"reason": "LLM check skipped", "hallucination_risk": "unknown", "actionable": True, "professional_tone": True}
 
     def _calculate_confidence(self, citation: dict, hallucination: dict, llm: dict) -> float:
-        """Combine all signals into a single confidence score."""
-        score = 0.5  # Start at neutral
+        """Combine all signals into a single confidence score.
 
-        # Citation score contribution (0.0 - 1.0) → weight 30%
-        score += (citation["score"] - 0.5) * 0.3
+        Weights:
+        - 40% LLM assessment (hallucination_risk from LLM)
+        - 30% hallucination check (factual accuracy)
+        - 20% citation score (keyword overlap with context)
+        - 10% neutral baseline
+        """
+        score = 0.0
 
-        # Hallucination penalty (each warning reduces score)
-        score -= hallucination["count"] * 0.1
-        if hallucination["critical_issues"]:
-            score -= 0.3
-
-        # LLM assessment (0.0 - 1.0 mapping) → weight 20%
+        # LLM assessment contribution (40%)
         risk_map = {"low": 1.0, "medium": 0.5, "high": 0.0, "unknown": 0.5}
         llm_score = risk_map.get(llm.get("hallucination_risk", "unknown"), 0.5)
-        score += (llm_score - 0.5) * 0.2
+        score += llm_score * 0.4
+
+        # Hallucination check contribution (30%)
+        if hallucination["critical_issues"]:
+            hall_score = 0.0
+        elif hallucination["count"] > 0:
+            hall_score = max(0.0, 1.0 - hallucination["count"] * 0.15)
+        else:
+            hall_score = 1.0
+        score += hall_score * 0.3
+
+        # Citation score contribution (20%)
+        score += citation["score"] * 0.2
+
+        # Neutral baseline (10%)
+        score += 0.5 * 0.1
 
         # Clamp to [0.0, 1.0]
         return max(0.0, min(1.0, score))

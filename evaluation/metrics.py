@@ -3,12 +3,14 @@ import json
 import re
 from typing import List, Dict
 
+
 def normalize(text: str) -> str:
     """Normalize text for comparison."""
     text = text.lower()
     text = re.sub(r'[^a-z0-9\s]', '', text)
     text = re.sub(r'\s+', ' ', text).strip()
     return text
+
 
 def keyword_coverage(generated: str, expected_keywords: List[str]) -> Dict:
     """Measure how many expected keywords appear in the generated response."""
@@ -20,6 +22,7 @@ def keyword_coverage(generated: str, expected_keywords: List[str]) -> Dict:
         "missing_keywords": [kw for kw in expected_keywords if kw.lower() not in gen_lower],
         "coverage": len(found) / len(expected_keywords) if expected_keywords else 1.0
     }
+
 
 def exact_match(generated: str, expected: str) -> bool:
     """Check if generated response contains the core information from expected."""
@@ -46,26 +49,26 @@ def rouge_l_similarity(generated: str, expected: str) -> float:
     """Simplified ROUGE-L inspired metric based on longest common subsequence."""
     gen_words = normalize(generated).split()
     exp_words = normalize(expected).split()
-    
+
     if not gen_words or not exp_words:
         return 0.0
-    
+
     # Simple LCS implementation
     m, n = len(gen_words), len(exp_words)
     dp = [[0] * (n + 1) for _ in range(m + 1)]
-    
+
     for i in range(1, m + 1):
         for j in range(1, n + 1):
             if gen_words[i-1] == exp_words[j-1]:
                 dp[i][j] = dp[i-1][j-1] + 1
             else:
                 dp[i][j] = max(dp[i-1][j], dp[i][j-1])
-    
+
     lcs = dp[m][n]
     precision = lcs / len(gen_words) if gen_words else 0
     recall = lcs / len(exp_words) if exp_words else 0
     f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
-    
+
     return f1
 
 
@@ -88,16 +91,38 @@ def summarize_results(results: List[Dict]) -> Dict:
     valid = [r for r in results if "keyword_coverage" in r]
     n = len(valid)
     if n == 0:
-        return {"total_evaluated": len(results), "successful": 0, "errors": len(results) - n}
-    
+        return {
+            "total_evaluated": len(results),
+            "successful": 0,
+            "errors": len(results) - n,
+            "escalation_rate": 0.0,
+            "avg_response_length": 0.0,
+            "avg_keyword_coverage": 0.0,
+            "avg_rouge_l_f1": 0.0,
+            "avg_retrieval_hitrate": 0.0,
+            "exact_match_rate": 0.0,
+        }
+
+    # Count escalated tickets
+    escalated_count = sum(1 for r in valid if r.get("status") == "escalated")
+
+    # Average response length
+    response_lengths = [r.get("resolution_length", 0) for r in valid]
+    avg_response_length = sum(response_lengths) / len(response_lengths) if response_lengths else 0
+
     return {
         "total_evaluated": len(results),
         "successful": n,
         "errors": len(results) - n,
+        "escalation_rate": escalated_count / n if n > 0 else 0.0,
+        "avg_response_length": avg_response_length,
         "avg_keyword_coverage": sum(r["keyword_coverage"] for r in valid) / n,
         "avg_rouge_l_f1": sum(r["rouge_l_f1"] for r in valid) / n,
         "avg_retrieval_hitrate": sum(r.get("retrieval_hitrate", 0) for r in valid) / n,
         "exact_match_rate": sum(1 for r in valid if r["exact_match"]) / n,
         "total_keywords_found": sum(r["found_keywords"] for r in valid),
-        "total_keywords_expected": sum(r["found_keywords"] + len(r.get("missing_keywords", [])) for r in valid)
+        "total_keywords_expected": sum(
+            r["found_keywords"] + len(r.get("missing_keywords", []))
+            for r in valid
+        ),
     }
