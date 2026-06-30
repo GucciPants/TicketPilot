@@ -24,18 +24,45 @@ class DocumentProcessor:
         
         return len(chunks)
     
-    def _chunk_text(self, text: str):
-        """Split text into overlapping chunks."""
+    def _chunk_text(self, text: str) -> list:
+        """Split text into chunks at sentence boundaries."""
+        import re
+        # Split on sentence boundaries
+        sentences = re.split(r'(?<=[.!?])\s+', text.replace('\n', ' '))
+        sentences = [s.strip() for s in sentences if s.strip()]
+
         chunks = []
-        start = 0
-        
-        while start < len(text):
-            end = start + self.chunk_size
-            chunk = text[start:end]
-            chunks.append(chunk)
-            start += self.chunk_size - self.chunk_overlap
-        
-        return chunks
+        current_chunk = []
+        current_size = 0
+
+        for sentence in sentences:
+            sentence_len = len(sentence)
+            if current_size + sentence_len > self.chunk_size and current_chunk:
+                chunks.append(' '.join(current_chunk))
+                # Overlap: keep last N chars worth of sentences
+                overlap_text = ' '.join(current_chunk)
+                if self.chunk_overlap > 0 and len(overlap_text) > self.chunk_overlap:
+                    # Find sentences that fit in overlap
+                    overlap_chars = 0
+                    overlap_sentences = []
+                    for s in reversed(current_chunk):
+                        if overlap_chars + len(s) > self.chunk_overlap:
+                            break
+                        overlap_sentences.insert(0, s)
+                        overlap_chars += len(s)
+                    current_chunk = overlap_sentences if overlap_sentences else []
+                    current_size = sum(len(s) for s in current_chunk)
+                else:
+                    current_chunk = []
+                    current_size = 0
+
+            current_chunk.append(sentence)
+            current_size += sentence_len
+
+        if current_chunk:
+            chunks.append(' '.join(current_chunk))
+
+        return chunks if chunks else [text]
     
     def ingest_file(self, file_path: str):
         """Ingest a file (txt, md, etc.)."""
