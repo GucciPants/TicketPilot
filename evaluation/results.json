@@ -1,89 +1,359 @@
 {
-  "timestamp": "2026-06-30T14:24:22.931469",
+  "timestamp": "2026-06-30T15:03:21.827675",
   "config": {
-    "tickets_evaluated": 5
+    "tickets_evaluated": 25
   },
   "summary": {
-    "total_evaluated": 5,
-    "successful": 5,
+    "total_evaluated": 25,
+    "successful": 25,
     "errors": 0,
-    "escalation_rate": 0.6,
-    "avg_response_length": 1044.2,
-    "avg_keyword_coverage": 0.6666666666666666,
-    "avg_rouge_l_f1": 0.11133985843023912,
-    "avg_retrieval_hitrate": 1.0,
+    "escalation_rate": 0.64,
+    "avg_response_length": 1108.6,
+    "avg_keyword_coverage": 0.6933333333333332,
+    "avg_rouge_l_f1": 0.12118607269469207,
+    "avg_retrieval_hitrate": 0.8266666666666665,
     "exact_match_rate": 0.0,
-    "total_keywords_found": 10,
-    "total_keywords_expected": 15
+    "total_keywords_found": 52,
+    "total_keywords_expected": 75
   },
   "results": [
     {
-      "keyword_coverage": 0.6666666666666666,
-      "found_keywords": 2,
-      "missing_keywords": [
-        "reset password"
-      ],
+      "keyword_coverage": 1.0,
+      "found_keywords": 3,
+      "missing_keywords": [],
       "exact_match": false,
-      "rouge_l_f1": 0.09132420091324202,
+      "rouge_l_f1": 0.0989010989010989,
       "retrieval_hitrate": 1.0,
       "ticket_id": "eval_001",
-      "db_id": 53,
-      "status": "resolved",
-      "resolution_length": 1138
+      "db_id": 62,
+      "status": "escalated",
+      "resolution_length": 1001
     },
     {
       "keyword_coverage": 1.0,
       "found_keywords": 3,
       "missing_keywords": [],
       "exact_match": false,
-      "rouge_l_f1": 0.12195121951219513,
+      "rouge_l_f1": 0.13333333333333336,
       "retrieval_hitrate": 1.0,
       "ticket_id": "eval_002",
-      "db_id": 54,
+      "db_id": 65,
       "status": "escalated",
-      "resolution_length": 895
+      "resolution_length": 894
+    },
+    {
+      "keyword_coverage": 0.6666666666666666,
+      "found_keywords": 2,
+      "missing_keywords": [
+        "server status"
+      ],
+      "exact_match": false,
+      "rouge_l_f1": 0.057971014492753624,
+      "retrieval_hitrate": 1.0,
+      "ticket_id": "eval_003",
+      "db_id": 69,
+      "status": "escalated",
+      "resolution_length": 1183
+    },
+    {
+      "keyword_coverage": 0.3333333333333333,
+      "found_keywords": 1,
+      "missing_keywords": [
+        "cpanel",
+        "setup"
+      ],
+      "exact_match": false,
+      "rouge_l_f1": 0.07821229050279328,
+      "retrieval_hitrate": 1.0,
+      "ticket_id": "eval_004",
+      "db_id": 73,
+      "status": "resolved",
+      "resolution_length": 1028
+    },
+    {
+      "keyword_coverage": 1.0,
+      "found_keywords": 3,
+      "missing_keywords": [],
+      "exact_match": false,
+      "rouge_l_f1": 0.21714285714285714,
+      "retrieval_hitrate": 1.0,
+      "ticket_id": "eval_005",
+      "db_id": 76,
+      "status": "escalated",
+      "resolution_length": 933
+    },
+    {
+      "keyword_coverage": 1.0,
+      "found_keywords": 3,
+      "missing_keywords": [],
+      "exact_match": false,
+      "rouge_l_f1": 0.12556053811659196,
+      "retrieval_hitrate": 1.0,
+      "ticket_id": "eval_006",
+      "db_id": 81,
+      "status": "resolved",
+      "resolution_length": 1373
     },
     {
       "keyword_coverage": 0.0,
       "found_keywords": 0,
       "missing_keywords": [
-        "server status",
-        "restart",
-        "error log"
+        "spam folder",
+        "reset password",
+        "email filter"
       ],
       "exact_match": false,
-      "rouge_l_f1": 0.09433962264150943,
-      "retrieval_hitrate": 1.0,
-      "ticket_id": "eval_003",
-      "db_id": 55,
-      "status": "escalated",
-      "resolution_length": 1222
+      "rouge_l_f1": 0.075,
+      "retrieval_hitrate": 0.6666666666666666,
+      "ticket_id": "eval_007",
+      "db_id": 86,
+      "status": "resolved",
+      "resolution_length": 1437
     },
     {
       "keyword_coverage": 0.6666666666666666,
       "found_keywords": 2,
       "missing_keywords": [
-        "cpanel"
+        "SSL renewal"
       ],
       "exact_match": false,
-      "rouge_l_f1": 0.09523809523809525,
+      "rouge_l_f1": 0.18518518518518517,
       "retrieval_hitrate": 1.0,
-      "ticket_id": "eval_004",
-      "db_id": 56,
+      "ticket_id": "eval_008",
+      "db_id": 89,
       "status": "resolved",
-      "resolution_length": 1111
+      "resolution_length": 855
+    },
+    {
+      "keyword_coverage": 0.3333333333333333,
+      "found_keywords": 1,
+      "missing_keywords": [
+        "pricing",
+        "downtime"
+      ],
+      "exact_match": false,
+      "rouge_l_f1": 0.12422360248447205,
+      "retrieval_hitrate": 0.3333333333333333,
+      "ticket_id": "eval_009",
+      "db_id": 93,
+      "status": "escalated",
+      "resolution_length": 880
+    },
+    {
+      "keyword_coverage": 0.3333333333333333,
+      "found_keywords": 1,
+      "missing_keywords": [
+        "connection timeout",
+        "database config"
+      ],
+      "exact_match": false,
+      "rouge_l_f1": 0.08791208791208789,
+      "retrieval_hitrate": 0.6666666666666666,
+      "ticket_id": "eval_010",
+      "db_id": 97,
+      "status": "escalated",
+      "resolution_length": 1091
+    },
+    {
+      "keyword_coverage": 0.6666666666666666,
+      "found_keywords": 2,
+      "missing_keywords": [
+        "email delivery"
+      ],
+      "exact_match": false,
+      "rouge_l_f1": 0.10285714285714287,
+      "retrieval_hitrate": 1.0,
+      "ticket_id": "eval_011",
+      "db_id": 103,
+      "status": "escalated",
+      "resolution_length": 961
     },
     {
       "keyword_coverage": 1.0,
       "found_keywords": 3,
       "missing_keywords": [],
       "exact_match": false,
-      "rouge_l_f1": 0.15384615384615383,
+      "rouge_l_f1": 0.12765957446808512,
       "retrieval_hitrate": 1.0,
-      "ticket_id": "eval_005",
-      "db_id": 57,
+      "ticket_id": "eval_012",
+      "db_id": 108,
+      "status": "resolved",
+      "resolution_length": 1026
+    },
+    {
+      "keyword_coverage": 1.0,
+      "found_keywords": 3,
+      "missing_keywords": [],
+      "exact_match": false,
+      "rouge_l_f1": 0.13,
+      "retrieval_hitrate": 1.0,
+      "ticket_id": "eval_013",
+      "db_id": 115,
       "status": "escalated",
-      "resolution_length": 855
+      "resolution_length": 1082
+    },
+    {
+      "keyword_coverage": 0.6666666666666666,
+      "found_keywords": 2,
+      "missing_keywords": [
+        "restore from backup"
+      ],
+      "exact_match": false,
+      "rouge_l_f1": 0.1339712918660287,
+      "retrieval_hitrate": 0.6666666666666666,
+      "ticket_id": "eval_014",
+      "db_id": 119,
+      "status": "resolved",
+      "resolution_length": 1174
+    },
+    {
+      "keyword_coverage": 0.3333333333333333,
+      "found_keywords": 1,
+      "missing_keywords": [
+        "refund policy",
+        "data export"
+      ],
+      "exact_match": false,
+      "rouge_l_f1": 0.0838323353293413,
+      "retrieval_hitrate": 0.6666666666666666,
+      "ticket_id": "eval_015",
+      "db_id": 125,
+      "status": "escalated",
+      "resolution_length": 903
+    },
+    {
+      "keyword_coverage": 1.0,
+      "found_keywords": 3,
+      "missing_keywords": [],
+      "exact_match": false,
+      "rouge_l_f1": 0.21333333333333335,
+      "retrieval_hitrate": 1.0,
+      "ticket_id": "eval_016",
+      "db_id": 128,
+      "status": "escalated",
+      "resolution_length": 795
+    },
+    {
+      "keyword_coverage": 1.0,
+      "found_keywords": 3,
+      "missing_keywords": [],
+      "exact_match": false,
+      "rouge_l_f1": 0.07650273224043716,
+      "retrieval_hitrate": 0.6666666666666666,
+      "ticket_id": "eval_017",
+      "db_id": 132,
+      "status": "resolved",
+      "resolution_length": 1113
+    },
+    {
+      "keyword_coverage": 0.6666666666666666,
+      "found_keywords": 2,
+      "missing_keywords": [
+        "error log"
+      ],
+      "exact_match": false,
+      "rouge_l_f1": 0.1,
+      "retrieval_hitrate": 0.6666666666666666,
+      "ticket_id": "eval_018",
+      "db_id": 134,
+      "status": "escalated",
+      "resolution_length": 1300
+    },
+    {
+      "keyword_coverage": 1.0,
+      "found_keywords": 3,
+      "missing_keywords": [],
+      "exact_match": false,
+      "rouge_l_f1": 0.1568627450980392,
+      "retrieval_hitrate": 1.0,
+      "ticket_id": "eval_019",
+      "db_id": 136,
+      "status": "escalated",
+      "resolution_length": 1205
+    },
+    {
+      "keyword_coverage": 1.0,
+      "found_keywords": 3,
+      "missing_keywords": [],
+      "exact_match": false,
+      "rouge_l_f1": 0.1484375,
+      "retrieval_hitrate": 1.0,
+      "ticket_id": "eval_020",
+      "db_id": 139,
+      "status": "resolved",
+      "resolution_length": 1439
+    },
+    {
+      "keyword_coverage": 0.3333333333333333,
+      "found_keywords": 1,
+      "missing_keywords": [
+        "domain transfer",
+        "unlock domain"
+      ],
+      "exact_match": false,
+      "rouge_l_f1": 0.14054054054054055,
+      "retrieval_hitrate": 0.6666666666666666,
+      "ticket_id": "eval_021",
+      "db_id": 142,
+      "status": "escalated",
+      "resolution_length": 988
+    },
+    {
+      "keyword_coverage": 0.6666666666666666,
+      "found_keywords": 2,
+      "missing_keywords": [
+        "debug mode"
+      ],
+      "exact_match": false,
+      "rouge_l_f1": 0.11764705882352942,
+      "retrieval_hitrate": 0.3333333333333333,
+      "ticket_id": "eval_022",
+      "db_id": 145,
+      "status": "escalated",
+      "resolution_length": 1416
+    },
+    {
+      "keyword_coverage": 0.6666666666666666,
+      "found_keywords": 2,
+      "missing_keywords": [
+        "parked domain"
+      ],
+      "exact_match": false,
+      "rouge_l_f1": 0.10784313725490197,
+      "retrieval_hitrate": 1.0,
+      "ticket_id": "eval_023",
+      "db_id": 150,
+      "status": "escalated",
+      "resolution_length": 1133
+    },
+    {
+      "keyword_coverage": 0.3333333333333333,
+      "found_keywords": 1,
+      "missing_keywords": [
+        "SPF record",
+        "email reputation"
+      ],
+      "exact_match": false,
+      "rouge_l_f1": 0.09909909909909909,
+      "retrieval_hitrate": 0.6666666666666666,
+      "ticket_id": "eval_024",
+      "db_id": 154,
+      "status": "escalated",
+      "resolution_length": 1234
+    },
+    {
+      "keyword_coverage": 0.6666666666666666,
+      "found_keywords": 2,
+      "missing_keywords": [
+        "cache files"
+      ],
+      "exact_match": false,
+      "rouge_l_f1": 0.10762331838565023,
+      "retrieval_hitrate": 0.6666666666666666,
+      "ticket_id": "eval_025",
+      "db_id": 157,
+      "status": "resolved",
+      "resolution_length": 1271
     }
   ]
 }
