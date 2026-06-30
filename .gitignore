@@ -70,3 +70,6 @@ research.md
 .coverage
 htmlcov/
 .pytest_cache/
+
+# Screenshots
+screenshots/

@@ -8,6 +8,24 @@ from app.database import Base, engine, SessionLocal
 from app.models import Ticket, User, UserRole
 from app.auth.utils import hash_password
 from app.middleware.rate_limit import RateLimitMiddleware
+def _seed_default_admin():
+    """Create a default admin user on first startup if no users exist."""
+    try:
+        db = SessionLocal()
+        if not db.query(User).first():
+            admin = User(
+                email="admin@ticketpilot.app",
+                hashed_password=hash_password("admin123"),
+                role=UserRole.ADMIN,
+                is_active=True,
+            )
+            db.add(admin)
+            db.commit()
+            logger.info("Default admin created: admin@ticketpilot.app / admin123")
+        db.close()
+    except Exception as e:
+        logger.warning("Failed to seed default admin (non-fatal): %s", str(e))
+
 import os
 import logging
 
@@ -21,9 +39,6 @@ logger = logging.getLogger(__name__)
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
-
-# Seed default admin user if no users exist
-_seed_default_admin()
 
 app = FastAPI(
     title="TicketPilot API",
@@ -60,21 +75,5 @@ async def read_admin():
 app.include_router(router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1/auth")
 
-
-def _seed_default_admin():
-    """Create a default admin user on first startup if no users exist."""
-    try:
-        db = SessionLocal()
-        if not db.query(User).first():
-            admin = User(
-                email="admin@ticketpilot.app",
-                hashed_password=hash_password("admin123"),
-                role=UserRole.ADMIN,
-                is_active=True,
-            )
-            db.add(admin)
-            db.commit()
-            logger.info("Default admin created: admin@ticketpilot.app / admin123")
-        db.close()
-    except Exception as e:
-        logger.warning("Failed to seed default admin (non-fatal): %s", str(e))
+# Seed default admin user if no users exist
+_seed_default_admin()
