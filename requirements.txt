@@ -9,9 +9,10 @@ prometheus-client==0.18.0
 pydantic==2.5.0
 pydantic[email-validator]
 httpx==0.25.1
-langchain==0.0.340
-langchain-community==0.0.1
-langchain-core==0.0.13
+langchain>=0.3.0
+langchain-openai>=0.2.0
+langchain-community>=0.3.0
+langchain-core>=0.3.0
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
 python-jose[cryptography]==3.3.0

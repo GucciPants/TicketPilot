@@ -1,12 +1,13 @@
 """Base agent class for the TicketPilot multi-agent system."""
 import os
 import logging
-from langchain.chat_models import ChatOpenAI
 
 logger = logging.getLogger(__name__)
 from app.metrics import token_usage_counter
 from app.utils.retry import sync_retry
 from langchain.schema import HumanMessage
+from app.agents.llm_factory import LLMFactory
+
 
 class BaseAgent:
     """Abstract base class for all agents in the pipeline."""
@@ -18,14 +19,11 @@ class BaseAgent:
 
     @property
     def llm(self):
-        """Lazy-initialized LLM instance with timeout."""
+        """Lazy-initialized LLM instance via LLMFactory."""
         if self._llm is None:
-            self._llm = ChatOpenAI(
+            self._llm = LLMFactory.create(
                 model=self.model_name,
-                openai_api_key=os.getenv("OPENROUTER_API_KEY"),
-                base_url=os.getenv("LLM_BASE_URL", "https://openrouter.ai/api/v1"),
                 temperature=self.temperature,
-                request_timeout=int(os.getenv("LLM_TIMEOUT", "120"))
             )
         return self._llm
 
