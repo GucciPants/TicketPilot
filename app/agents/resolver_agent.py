@@ -11,7 +11,7 @@ class ResolverAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             model=os.getenv("POWER_MODEL", "anthropic/claude-sonnet-4-20250514"),
-            temperature=0.7
+            temperature=0.2
         )
 
     def run(self, state: dict) -> dict:
@@ -26,16 +26,27 @@ class ResolverAgent(BaseAgent):
             for doc in state["context_docs"]:
                 context_text += f"- {doc['text'][:300]}...\n"
         
-        prompt = f"""You are a support agent for a SaaS platform. 
+        category_lower = category.lower() if category else "general"
+
+        # Few-shot examples based on category
+        examples = {
+            "access": """Example for 'cannot log in': Try resetting your password via the 'Forgot Password' link on the login page. Make sure caps lock is off when typing your password. If the reset email doesn't arrive, check your spam folder and add us to your safe senders list.""",
+            "billing": """Example for 'wrong charge on bill': Please check your invoice history in the billing portal to verify the charge. If the amount is incorrect, I can process a refund for the difference. Refunds are typically processed within 3-5 business days.""",
+            "technical": """Example for 'website down 503 error': Check our status page for any ongoing incidents. If none, restart your server from the control panel and review the error logs in your server logs section.""",
+        }
+        example = examples.get(category_lower, "")
+
+        prompt = f"""You are a support agent for a SaaS platform. Respond in 2-3 short, direct sentences. Be specific and actionable.
+
 Ticket category: {category}
 Ticket description: {description}{context_text}
 
-Provide a helpful, professional resolution. Follow these rules:
-1. Include specific steps the user can take, using keywords from the knowledge base.
-2. Be concise — 2-4 short paragraphs maximum.
-3. If the issue requires human intervention, clearly state that it needs escalation.
-4. Keep the response friendly but professional.
-5. IMPORTANT: Use the exact technical terms from the knowledge base articles when applicable."""
+{('Example format:\n' + example + '\n\n') if example else ''}IMPORTANT rules:
+1. Use the EXACT keywords from the knowledge base articles (e.g., use "reset password" not "create new password").
+2. Start each step with an action verb.
+3. Maximum 3 short sentences.
+4. If escalation is needed, end with: "This needs to be escalated to our team."
+5. Do NOT add greetings, pleasantries, or meta-commentary. Just give the solution."""
 
         try:
             state["resolution"] = self.invoke_with_retry(prompt)
