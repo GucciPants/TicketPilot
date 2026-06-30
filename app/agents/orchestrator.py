@@ -12,25 +12,49 @@ import json
 import logging
 import redis
 import os
+import threading
+import atexit
 
-# Redis event publisher
+# Redis event publisher — thread-safe singleton
 _redis_pub = None
-def _publish_ticket_event(ticket_id: int, status: str):
-    """Publish ticket update event to Redis Pub/Sub."""
+_redis_lock = threading.Lock()
+
+def _get_redis_pub():
+    """Get or create the Redis publisher client (thread-safe)."""
     global _redis_pub
     if _redis_pub is None:
+        with _redis_lock:
+            if _redis_pub is None:
+                try:
+                    _redis_pub = redis.from_url(os.getenv("REDIS_URL", "redis://redis:6379/0"))
+                    atexit.register(_cleanup_redis)
+                except Exception:
+                    return None
+    return _redis_pub
+
+def _cleanup_redis():
+    """Close the Redis connection on shutdown."""
+    global _redis_pub
+    if _redis_pub is not None:
         try:
-            _redis_pub = redis.from_url(os.getenv("REDIS_URL", "redis://redis:6379/0"))
+            _redis_pub.close()
         except Exception:
-            return  # Redis not available, skip publishing
+            pass
+        _redis_pub = None
+
+def _publish_ticket_event(ticket_id: int, status: str):
+    """Publish ticket update event to Redis Pub/Sub."""
+    pub = _get_redis_pub()
+    if pub is None:
+        return
     try:
-        _redis_pub.publish("ticket:events", json.dumps({
+        pub.publish("ticket:events", json.dumps({
             "type": "ticket_updated",
             "ticket_id": ticket_id,
             "status": status
         }))
-    except Exception:
-        pass  # Silently fail on publish error
+    except Exception as e:
+        logger.warning("Failed to publish ticket event: %s", e)
 
 logger = logging.getLogger(__name__)
 
