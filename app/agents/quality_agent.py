@@ -5,6 +5,7 @@ logger = logging.getLogger(__name__)
 from app.agents.base import BaseAgent
 import json
 import re
+import os
 
 class QualityAgent(BaseAgent):
     """Validates resolution quality using citation check, hallucination detection, and confidence scoring."""

@@ -23,6 +23,23 @@ import requests
 
 API_BASE = os.getenv("EVAL_API_URL", "http://localhost:8000/api/v1")
 
+# Admin credentials for KB ingest and privileged operations
+ADMIN_EMAIL = os.getenv("EVAL_ADMIN_EMAIL", "admin@ticketpilot.app")
+ADMIN_PASSWORD = os.getenv("EVAL_ADMIN_PASSWORD", "admin123")
+
+
+def get_admin_token() -> str:
+    """Login as admin and return a JWT token."""
+    resp = requests.post(
+        f"{API_BASE}/auth/login",
+        json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
+        timeout=10
+    )
+    if resp.status_code != 200:
+        print(f"  ⚠️  Admin login failed: {resp.text}")
+        return None
+    return resp.json()["access_token"]
+
 
 def wait_for_processing(ticket_id: int, max_wait: int = 600, interval: int = 5) -> dict:
     """Poll until ticket is resolved or escalated."""
@@ -43,13 +60,21 @@ def run_evaluation(gold_data: list, verbose: bool = False) -> list:
     """Run the full evaluation pipeline."""
     results = []
 
-    # Step 0: Ingest knowledge base once before any tickets
-    try:
-        ingest_resp = requests.post(f"{API_BASE}/knowledge-base/ingest", timeout=30)
-        if verbose:
-            print(f"  KB ingest: {ingest_resp.json()}")
-    except Exception as e:
-        print(f"  ⚠️  KB ingest failed (non-fatal): {e}")
+    # Step 0: Login as admin and ingest knowledge base
+    token = get_admin_token()
+    if token:
+        try:
+            ingest_resp = requests.post(
+                f"{API_BASE}/knowledge-base/ingest",
+                headers={"Authorization": f"Bearer {token}"},
+                timeout=30
+            )
+            if verbose:
+                print(f"  KB ingest: {ingest_resp.json()}")
+        except Exception as e:
+            print(f"  ⚠️  KB ingest failed (non-fatal): {e}")
+    else:
+        print("  ⚠️  Skipping KB ingest — no admin token")
 
     for i, item in enumerate(gold_data):
         ticket_id = item["ticket_id"]
@@ -131,13 +156,15 @@ def run_evaluation(gold_data: list, verbose: bool = False) -> list:
                 print(f"  ❌ Error: {e}")
             results.append({"ticket_id": ticket_id, "error": str(e), "status": "error"})
 
-        # Small delay between tickets to avoid overwhelming the pipeline
+        # Delay between tickets to avoid rate limiting
         time.sleep(3)
 
     return results
 
 
 def main():
+    global API_BASE
+
     parser = argparse.ArgumentParser(description="Evaluate TicketPilot pipeline")
     parser.add_argument("--tickets", type=int, default=0, help="Number of tickets to evaluate (0 = all)")
     parser.add_argument("--output", default="evaluation/results.json", help="Output file path")
@@ -146,7 +173,6 @@ def main():
     args = parser.parse_args()
 
     # Allow env override
-    global API_BASE
     API_BASE = args.api_url
 
     # Load gold dataset

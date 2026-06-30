@@ -30,9 +30,12 @@ class ResolverAgent(BaseAgent):
 Ticket category: {category}
 Ticket description: {description}{context_text}
 
-Provide a helpful, professional resolution. Include specific steps the user can take.
-If the issue requires human intervention, clearly state that it needs escalation.
-Keep the response friendly but professional."""
+Provide a helpful, professional resolution. Follow these rules:
+1. Include specific steps the user can take, using keywords from the knowledge base.
+2. Be concise — 2-4 short paragraphs maximum.
+3. If the issue requires human intervention, clearly state that it needs escalation.
+4. Keep the response friendly but professional.
+5. IMPORTANT: Use the exact technical terms from the knowledge base articles when applicable."""
 
         try:
             state["resolution"] = self.invoke_with_retry(prompt)

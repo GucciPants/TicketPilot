@@ -1,60 +1,89 @@
 {
-  "timestamp": "2026-05-08T15:18:05.990501",
+  "timestamp": "2026-06-30T14:24:22.931469",
   "config": {
-    "tickets_evaluated": 3
+    "tickets_evaluated": 5
   },
   "summary": {
-    "total_evaluated": 3,
-    "successful": 3,
+    "total_evaluated": 5,
+    "successful": 5,
     "errors": 0,
+    "escalation_rate": 0.6,
+    "avg_response_length": 1044.2,
     "avg_keyword_coverage": 0.6666666666666666,
-    "avg_rouge_l_f1": 0.03936655069582353,
-    "avg_retrieval_hitrate": 0.3333333333333333,
+    "avg_rouge_l_f1": 0.11133985843023912,
+    "avg_retrieval_hitrate": 1.0,
     "exact_match_rate": 0.0,
-    "total_keywords_found": 6,
-    "total_keywords_expected": 9
+    "total_keywords_found": 10,
+    "total_keywords_expected": 15
   },
   "results": [
     {
-      "keyword_coverage": 0.3333333333333333,
-      "found_keywords": 1,
+      "keyword_coverage": 0.6666666666666666,
+      "found_keywords": 2,
       "missing_keywords": [
-        "reset password",
-        "browser cache"
+        "reset password"
       ],
       "exact_match": false,
-      "rouge_l_f1": 0.04013377926421404,
-      "retrieval_hitrate": 0.3333333333333333,
+      "rouge_l_f1": 0.09132420091324202,
+      "retrieval_hitrate": 1.0,
       "ticket_id": "eval_001",
-      "db_id": 31,
-      "status": "escalated",
-      "resolution_length": 3523
+      "db_id": 53,
+      "status": "resolved",
+      "resolution_length": 1138
     },
     {
       "keyword_coverage": 1.0,
       "found_keywords": 3,
       "missing_keywords": [],
       "exact_match": false,
-      "rouge_l_f1": 0.040185471406491494,
-      "retrieval_hitrate": 0.6666666666666666,
+      "rouge_l_f1": 0.12195121951219513,
+      "retrieval_hitrate": 1.0,
       "ticket_id": "eval_002",
-      "db_id": 32,
+      "db_id": 54,
       "status": "escalated",
-      "resolution_length": 3725
+      "resolution_length": 895
+    },
+    {
+      "keyword_coverage": 0.0,
+      "found_keywords": 0,
+      "missing_keywords": [
+        "server status",
+        "restart",
+        "error log"
+      ],
+      "exact_match": false,
+      "rouge_l_f1": 0.09433962264150943,
+      "retrieval_hitrate": 1.0,
+      "ticket_id": "eval_003",
+      "db_id": 55,
+      "status": "escalated",
+      "resolution_length": 1222
     },
     {
       "keyword_coverage": 0.6666666666666666,
       "found_keywords": 2,
       "missing_keywords": [
-        "server status"
+        "cpanel"
       ],
       "exact_match": false,
-      "rouge_l_f1": 0.03778040141676505,
-      "retrieval_hitrate": 0.0,
-      "ticket_id": "eval_003",
-      "db_id": 33,
+      "rouge_l_f1": 0.09523809523809525,
+      "retrieval_hitrate": 1.0,
+      "ticket_id": "eval_004",
+      "db_id": 56,
+      "status": "resolved",
+      "resolution_length": 1111
+    },
+    {
+      "keyword_coverage": 1.0,
+      "found_keywords": 3,
+      "missing_keywords": [],
+      "exact_match": false,
+      "rouge_l_f1": 0.15384615384615383,
+      "retrieval_hitrate": 1.0,
+      "ticket_id": "eval_005",
+      "db_id": 57,
       "status": "escalated",
-      "resolution_length": 5046
+      "resolution_length": 855
     }
   ]
 }

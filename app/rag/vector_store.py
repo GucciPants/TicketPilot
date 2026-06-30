@@ -60,9 +60,9 @@ class VectorStore:
         """Search for relevant documents."""
         try:
             query_embedding = get_embedding(query)
-            results = self.client.search(
+            results = self.client.query_points(
                 collection_name=self.collection_name,
-                query_vector=query_embedding,
+                query=query_embedding,
                 limit=limit
             )
             return [
@@ -71,7 +71,7 @@ class VectorStore:
                     "text": r.payload.get("text"),
                     "score": r.score
                 }
-                for r in results
+                for r in results.points
             ]
         except Exception as e:
             logger.error("Vector search failed: %s", str(e))
