@@ -53,18 +53,18 @@ class TestLogin:
 
     def test_login_valid(self, client, test_user):
         response = client.post(self.LOGIN_URL, json={
-            "email": "admin@test.local",
+            "email": "admin@test.example",
             "password": "test123",
         })
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "access_token" in data
-        assert data["user"]["email"] == "admin@test.local"
+        assert data["user"]["email"] == "admin@test.example"
         assert data["user"]["role"] == "admin"
 
     def test_login_wrong_password(self, client, test_user):
         response = client.post(self.LOGIN_URL, json={
-            "email": "admin@test.local",
+            "email": "admin@test.example",
             "password": "wrongpassword",
         })
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -79,7 +79,7 @@ class TestLogin:
     def test_login_case_insensitive(self, client, test_user):
         """Email matching should be case-insensitive."""
         response = client.post(self.LOGIN_URL, json={
-            "email": "ADMIN@TEST.LOCAL",
+            "email": "Admin@test.example",
             "password": "test123",
         })
         assert response.status_code == status.HTTP_200_OK
@@ -94,7 +94,7 @@ class TestMe:
         response = client.get(self.ME_URL, headers=auth_headers)
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data["email"] == "admin@test.local"
+        assert data["email"] == "admin@test.example"
         assert data["role"] == "admin"
 
     def test_me_no_token(self, client):

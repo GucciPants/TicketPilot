@@ -49,9 +49,8 @@ def setup_database():
 def mock_redis():
     """Mock Redis to prevent real connection attempts."""
     mock_client = MagicMock()
-    with patch("app.api.routes.redis.from_url", return_value=mock_client):
-        with patch("app.api.routes.redis_client", mock_client):
-            yield mock_client
+    with patch("app.api.routes._get_redis_client", return_value=mock_client):
+        yield mock_client
 
 
 @pytest.fixture
@@ -88,7 +87,7 @@ def test_user():
     """Create a test admin user in the database. Returns the User object."""
     db = TestSessionLocal()
     user = User(
-        email="admin@test.local",
+        email="admin@test.example",
         hashed_password=hash_password("test123"),
         role=UserRole.ADMIN,
         is_active=True,
@@ -112,7 +111,7 @@ def customer_user():
     """Create a test customer user. Returns the User object."""
     db = TestSessionLocal()
     user = User(
-        email="customer@test.local",
+        email="customer@test.example",
         hashed_password=hash_password("test123"),
         role=UserRole.CUSTOMER,
         is_active=True,
