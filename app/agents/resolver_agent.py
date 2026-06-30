@@ -3,7 +3,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 from app.agents.base import BaseAgent
-from langchain.schema import HumanMessage
 import os
 
 class ResolverAgent(BaseAgent):
@@ -36,9 +35,7 @@ If the issue requires human intervention, clearly state that it needs escalation
 Keep the response friendly but professional."""
 
         try:
-            response = self.llm.invoke([HumanMessage(content=prompt)])
-            state["resolution"] = response.content.strip()
-            self.track_tokens(response)
+            state["resolution"] = self.invoke_with_retry(prompt)
             
         except Exception as e:
             logger.error("Resolution generation failed", exc_info=True)

@@ -3,7 +3,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 from app.agents.base import BaseAgent
-from langchain.schema import HumanMessage
 import json
 import re
 
@@ -148,13 +147,11 @@ Consider:
 - Does it sound like a human support agent?"""
 
         try:
-            response = self.llm.invoke([HumanMessage(content=prompt)])
-            content = response.content.strip()
+            content = self.invoke_with_retry(prompt)
             if content.startswith("```"):
                 content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
 
             result = json.loads(content)
-            self.track_tokens(response)
             return result
         except Exception as e:
             logger.warning("QualityAgent LLM check failed", exc_info=True)

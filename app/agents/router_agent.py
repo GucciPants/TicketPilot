@@ -1,6 +1,5 @@
 """Router Agent - Classifies tickets into categories."""
 from app.agents.base import BaseAgent
-from langchain.schema import HumanMessage
 import json
 import logging
 
@@ -33,9 +32,8 @@ Examples:
 - "How do I update my email?" → account, low"""
 
         try:
-            response = self.llm.invoke([HumanMessage(content=prompt)])
+            content = self.invoke_with_retry(prompt)
             # Clean response
-            content = response.content.strip()
             if content.startswith("```"):
                 content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
             
@@ -43,8 +41,6 @@ Examples:
             state["category"] = result.get("category", "general")
             state["priority"] = result.get("priority", "medium")
             state["requires_rag"] = result.get("requires_rag", True)
-            
-            self.track_tokens(response)
             
         except Exception as e:
             logger.warning("Route classification failed: %s", str(e))

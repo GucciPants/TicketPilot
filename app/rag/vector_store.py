@@ -4,8 +4,10 @@ import os
 import hashlib
 import logging
 from app.rag.embedding import get_embedding
+from app.utils.retry import sync_retry
 
 logger = logging.getLogger(__name__)
+
 
 class VectorStore:
     def __init__(self):
@@ -13,13 +15,14 @@ class VectorStore:
         self.collection_name = "ticketpilot_knowledge"
         self.client = QdrantClient(url=self.qdrant_url)
         self._init_collection()
-    
+
+    @sync_retry(max_retries=3, base_delay=1.0, backoff=2.0)
     def _init_collection(self):
         """Initialize Qdrant collection if it doesn't exist."""
         try:
             collections = self.client.get_collections()
             collection_names = [c.name for c in collections.collections]
-            
+
             if self.collection_name not in collection_names:
                 self.client.create_collection(
                     collection_name=self.collection_name,
@@ -28,7 +31,7 @@ class VectorStore:
                 logger.info("Created collection: %s", self.collection_name)
         except Exception as e:
             logger.error("Failed to initialize collection: %s", str(e))
-    
+
     def add_document(self, doc_id: str, text: str, metadata: dict = None):
         """Add a document to the vector store."""
         try:
@@ -50,7 +53,9 @@ class VectorStore:
         except Exception as e:
             logger.error("Failed to add document %s: %s", doc_id, str(e))
             return False
-    
+
+    @sync_retry(max_retries=3, base_delay=1.0, backoff=2.0,
+                exceptions=(Exception,))
     def search(self, query: str, limit: int = 3):
         """Search for relevant documents."""
         try:
