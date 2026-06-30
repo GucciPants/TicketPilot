@@ -37,8 +37,15 @@ class TicketResponse(BaseModel):
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
-# Redis connection
-redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://redis:6379/0"))
+# Redis connection (lazy-initialized)
+_redis_client = None
+
+def _get_redis_client():
+    """Return a lazily-initialized Redis client."""
+    global _redis_client
+    if _redis_client is None:
+        _redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://redis:6379/0"))
+    return _redis_client
 
 
 # ── Helper: resolve user from SSE query param token ──────────────
@@ -87,7 +94,7 @@ async def create_ticket(
         "ticket_id": ticket.id,
         "description": ticket.description,
     }
-    redis_client.lpush("ticket_queue", json.dumps(ticket_payload))
+    _get_redis_client().lpush("ticket_queue", json.dumps(ticket_payload))
 
     return ticket.to_dict()
 
@@ -127,7 +134,7 @@ async def ticket_stream(token: Optional[str] = Query(None)):
             db.close()
 
         # Step 2: Subscribe to Redis Pub/Sub for real-time updates
-        pubsub = redis_client.pubsub()
+        pubsub = _get_redis_client().pubsub()
         pubsub.subscribe("ticket:events")
 
         try:
@@ -139,10 +146,22 @@ async def ticket_stream(token: Optional[str] = Query(None)):
                     if message and message["type"] == "message":
                         db2 = SessionLocal()
                         try:
-                            query = db2.query(Ticket).order_by(Ticket.created_at.desc(), Ticket.id.desc())
-                            query = _filter_tickets_for_user(query, user)
-                            tickets_data = [t.to_dict() for t in query.all()]
-                            yield f"event: tickets_updated\ndata: {json.dumps({'tickets': tickets_data})}\n\n"
+                            msg_data = json.loads(message["data"])
+                            changed_ticket_id = msg_data.get("ticket_id")
+
+                            if changed_ticket_id:
+                                # Incremental: query only the changed ticket
+                                ticket = db2.query(Ticket).filter(Ticket.id == changed_ticket_id).first()
+                                if ticket:
+                                    # Check user permissions
+                                    if user is None or user.role.value in ("agent", "admin") or ticket.user_id == user.id:
+                                        yield f"event: ticket_updated\ndata: {json.dumps(ticket.to_dict())}\n\n"
+                            else:
+                                # Fallback: full list if no ticket_id in message
+                                query = db2.query(Ticket).order_by(Ticket.created_at.desc(), Ticket.id.desc())
+                                query = _filter_tickets_for_user(query, user)
+                                tickets_data = [t.to_dict() for t in query.all()]
+                                yield f"event: tickets_updated\ndata: {json.dumps({'tickets': tickets_data})}\n\n"
                         finally:
                             db2.close()
                 except asyncio.CancelledError:
@@ -207,7 +226,7 @@ async def resolve_ticket(
     db.commit()
     db.refresh(ticket)
 
-    redis_client.publish("ticket:events", json.dumps({
+    _get_redis_client().publish("ticket:events", json.dumps({
         "type": "ticket_updated",
         "ticket_id": ticket.id,
         "status": "resolved"
