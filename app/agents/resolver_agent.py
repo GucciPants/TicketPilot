@@ -35,13 +35,14 @@ class ResolverAgent(BaseAgent):
             "technical": """Example for 'website down 503 error': Check our status page for any ongoing incidents. If none, restart your server from the control panel and review the error logs in your server logs section.""",
         }
         example = examples.get(category_lower, "")
+        example_section = f"Example format:\n{example}\n\n" if example else ""
 
         prompt = f"""You are a support agent for a SaaS platform. Respond in 2-3 short, direct sentences. Be specific and actionable.
 
 Ticket category: {category}
 Ticket description: {description}{context_text}
 
-{('Example format:\n' + example + '\n\n') if example else ''}IMPORTANT rules:
+{example_section}IMPORTANT rules:
 1. Use the EXACT keywords from the knowledge base articles (e.g., use "reset password" not "create new password").
 2. Start each step with an action verb.
 3. Maximum 3 short sentences.

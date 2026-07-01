@@ -26,6 +26,7 @@ class AsyncBaseAgent:
         self._semaphore = asyncio.Semaphore(self.concurrency)
         self._redis = None
         self._running = False
+        self._last_id = "$"  # Stream cursor: tracks last read position
 
     async def _get_redis(self):
         """Lazy-init Redis connection."""
@@ -78,7 +79,7 @@ class AsyncBaseAgent:
         while self._running:
             try:
                 results = await r.xread(
-                    {self.input_stream: "$"},
+                    {self.input_stream: self._last_id},
                     count=self.batch_size,
                     block=5000
                 )
@@ -88,6 +89,8 @@ class AsyncBaseAgent:
                 tasks = []
                 for stream_name, messages in results:
                     for msg_id, msg_data in messages:
+                        # Track the last read message ID for next iteration
+                        self._last_id = msg_id.decode() if isinstance(msg_id, bytes) else msg_id
                         try:
                             payload = json.loads(msg_data[b"data"].decode())
                             tasks.append(self._process_with_semaphore(payload))
