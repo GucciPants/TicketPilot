@@ -397,45 +397,62 @@ python -m pytest tests/ -v
 
 **55 tests total**: 9 agent + 20 API + 26 auth. All external services are mocked.
 
-## Roadmap
+## Milestones
 
-### Phase 1 — Core Pipeline ✅
-- [x] Docker stack, PostgreSQL, REST API
-- [x] Multi-agent pipeline (Router → Context → Resolver → Quality)
-- [x] RAG with Qdrant + configurable chunking + LRU cached embeddings
-- [x] Prometheus monitoring, rate limiting
-- [x] Frontend dashboard with SSE
+### 🏗️ Phase 1 — Core Pipeline ✅
+- [x] Docker stack (PostgreSQL, Redis, Qdrant, Prometheus)
+- [x] REST API with FastAPI + SSE streaming
+- [x] Multi-agent pipeline: Router → Context → Resolver → Quality
+- [x] RAG knowledge base with Qdrant + sentence-aware chunking
+- [x] LRU-cached embeddings via OpenRouter
+- [x] Prometheus monitoring + Redis rate limiting
+- [x] Frontend dashboard (Tailwind + Alpine.js) + admin panel
 - [x] Escalation workflow with human-in-the-loop
-- [x] 55 unit/integration tests
+- [x] 55 unit/integration tests with mocked services
 - [x] Evaluation framework (25 gold tickets)
 - [x] CI/CD with GitHub Actions
 
-### Phase 2 — User Management ✅
-- [x] User model, auth tables
-- [x] Registration & login (JWT)
-- [x] Role-based access control (admin, agent, customer)
-- [x] Ticket ownership + filtering
-- [x] Admin user management
-- [x] Auth tests
+### 👥 Phase 2 — User Management ✅
+- [x] User model with roles (admin, agent, customer)
+- [x] JWT-based registration & login
+- [x] Role-based access control on all endpoints
+- [x] Ticket ownership scoping
+- [x] Admin user management console
+- [x] Auth flow tests (26 tests)
 
-### Phase 3 — Quality & Async 🔄
-- [x] LLM-based hallucination detection
-- [x] Gold standard KB integration
-- [x] Sentence-aware document chunking
-- [x] Event-driven async pipeline (Redis Streams)
-- [x] Thread-safe Redis connections
-- [x] Retry with exponential backoff on all external calls
-- [x] Provider abstraction (LLMFactory)
+### ⚡ Phase 3 — Quality & Async ✅
+- [x] LLM-based hallucination detection (replaced regex)
+- [x] Gold-standard resolutions indexed in vector store
+- [x] Citation checking + confidence scoring (40/30/20/10)
+- [x] Event-driven async pipeline with Redis Streams
+- [x] Semaphore-based concurrency (N=4 per agent)
+- [x] Retry with exponential backoff on ALL external calls
+- [x] Thread-safe Redis with lock + atexit cleanup
+- [x] Provider abstraction (LLMFactory: OpenRouter/OpenAI)
 - [x] LangChain upgrade (0.0.340 → 0.3.x)
-- [x] Alembic migrations
+- [x] Alembic database migrations
+- [x] Configurable quality threshold
 
-### Phase 4 — Polish 🧹
-- [ ] Hybrid search (dense + sparse) for better retrieval
-- [ ] Consumer groups for horizontal worker scaling
-- [ ] Dead-letter queue for failed messages
-- [ ] Graceful shutdown with in-flight completion
-- [ ] Response caching for common tickets
-- [ ] Load testing results
+### 🧹 Phase 4 — Production Considerations
+_Project completed as portfolio demonstration. Next steps in a production context:_
+- Hybrid search (dense + sparse) for edge-case retrieval
+- Redis consumer groups for horizontal worker scaling
+- Dead-letter queue for failed message handling
+- Graceful shutdown with in-flight ticket completion
+- Response caching for frequently asked questions
+
+### Final Results
+
+| Metric | Before | After |
+|--------|:------:|:-----:|
+| ROUGE-L F1 | 3.9% | **50.7%** 🚀 |
+| Retrieval hitrate | 33% | **78.7%** 🎯 |
+| Escalation rate | 100% | **16%** 🎯 |
+| Pipeline errors | — | **0/25** ✅ |
+| Tests | 29 | **55/55** ✅ |
+| LangChain | 0.0.340 | **0.3.x** |
+| Pipeline | Sync | **Async event-driven** |
+| Hallucination detection | Regex | **LLM-based** |
 
 ## License
 
