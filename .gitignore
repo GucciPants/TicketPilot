@@ -76,3 +76,6 @@ screenshots/
 nul
 .pi/
 composio-linkedin-setup.py
+
+# Git worktrees
+.worktrees/
