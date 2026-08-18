@@ -12,6 +12,8 @@ class QualityAgent(BaseAgent):
 
     def __init__(self):
         super().__init__(model=None, temperature=0.2)
+        # Auto-resolve threshold; configurable via QUALITY_THRESHOLD env var (default 0.4)
+        self.quality_threshold = float(os.getenv("QUALITY_THRESHOLD", "0.4"))
 
     def run(self, state: dict) -> dict:
         """Evaluate resolution quality and produce a structured quality check result."""
@@ -41,7 +43,7 @@ class QualityAgent(BaseAgent):
 
         # Step 4: Combined confidence score
         confidence = self._calculate_confidence(citation_check, hallucination_check, llm_check)
-        passed = confidence >= 0.4 and not hallucination_check["critical_issues"]
+        passed = confidence >= self.quality_threshold and not hallucination_check["critical_issues"]
         suggest_escalation = not passed or hallucination_check["critical_issues"]
 
         state["quality_check"] = {

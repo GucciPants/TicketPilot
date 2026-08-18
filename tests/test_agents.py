@@ -66,3 +66,22 @@ class TestQualityAgent:
         state = QualityAgent().run(agent_state)
         assert 'quality_check' in state
         assert state['quality_check']['passed'] is False
+
+    def test_quality_threshold_env_var_is_respected(self, mock_llm, agent_state, monkeypatch):
+        """QUALITY_THRESHOLD must control the auto-resolve decision (F2)."""
+        monkeypatch.setenv("QUALITY_THRESHOLD", "0.99")
+        mock_llm(GOOD_QA)
+        agent_state["resolution"] = (
+            "The user should reset the password. Then they should clear "
+            "the browser cache. Finally they should try logging in again."
+        )
+        agent_state["context_docs"] = [
+            {"text": "reset the password clear the browser cache logging in", "score": 0.9}
+        ]
+
+        strict = QualityAgent().run(agent_state)
+        assert strict["quality_check"]["passed"] is False  # ~0.75 confidence < 0.99
+
+        monkeypatch.setenv("QUALITY_THRESHOLD", "0.1")
+        relaxed = QualityAgent().run(agent_state)
+        assert relaxed["quality_check"]["passed"] is True  # ~0.75 confidence >= 0.1

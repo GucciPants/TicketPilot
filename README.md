@@ -40,7 +40,7 @@ Built as an AI Engineer portfolio demonstration project.
 - **LLM-based hallucination detection** — extracts factual claims from resolution, verifies against context
 - **Citation check** — verifies resolution key terms appear in RAG context
 - **Confidence scoring** — combines LLM assessment (40%), hallucination check (30%), citation score (20%), and baseline (10%)
-- **Configurable threshold** — `QUALITY_THRESHOLD` env var (default: 0.3)
+- **Configurable threshold** — `QUALITY_THRESHOLD` env var (default: 0.4)
 - **Gold standard KB** — gold dataset resolutions are indexed for direct retrieval
 
 ### Infrastructure
@@ -302,7 +302,7 @@ Metrics measured:
 | `LLM_TIMEOUT` | `120` | LLM call timeout in seconds |
 | `TRIAGE_MODEL` | `google/gemini-2.0-flash-001` | Model for routing + quality check |
 | `POWER_MODEL` | `anthropic/claude-sonnet-4-20250514` | Model for resolution generation |
-| `QUALITY_THRESHOLD` | `0.3` | Minimum confidence to auto-resolve |
+| `QUALITY_THRESHOLD` | `0.4` | Minimum confidence to auto-resolve |
 | `QDRANT_URL` | `http://qdrant:6333` | Qdrant vector DB URL |
 | `REDIS_URL` | `redis://redis:6379/0` | Redis connection string |
 | `DATABASE_URL` | `postgresql://...` | PostgreSQL connection string |
@@ -332,7 +332,7 @@ The Quality Agent evaluates every resolution before it's finalized:
 2. **Citation check** — checks if key terms from the resolution appear in context documents
 3. **LLM quality assessment** — final quality pass with hallucination risk scoring
 4. **Combined confidence** — `0.0-1.0` score: LLM (40%) + hallucination (30%) + citation (20%) + baseline (10%)
-5. **Decision** — confidence ≥ threshold (default 0.3) with no critical issues → resolved, else → escalated
+5. **Decision** — confidence ≥ threshold (default 0.4) with no critical issues → resolved, else → escalated
 
 Quality data is stored in `tickets.escalation_info` and visible on the admin page.
 
