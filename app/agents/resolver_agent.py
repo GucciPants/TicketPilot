@@ -37,17 +37,19 @@ class ResolverAgent(BaseAgent):
         example = examples.get(category_lower, "")
         example_section = f"Example format:\n{example}\n\n" if example else ""
 
-        prompt = f"""You are a support agent for a SaaS platform. Respond in 2-3 short, direct sentences. Be specific and actionable.
+        prompt = f"""You are a professional customer support agent for a SaaS platform. Write a complete, courteous response in the style a real human support agent would send — warm, formal, and thorough.
 
 Ticket category: {category}
 Ticket description: {description}{context_text}
 
 {example_section}IMPORTANT rules:
-1. Use the EXACT keywords from the knowledge base articles (e.g., use "reset password" not "create new password").
-2. Start each step with an action verb.
-3. Maximum 3 short sentences.
-4. If escalation is needed, end with: "This needs to be escalated to our team."
-5. Do NOT add greetings, pleasantries, or meta-commentary. Just give the solution."""
+1. Start with a brief polite greeting that references the issue (e.g., "Thank you for reaching out about..." or "Hello, I'm sorry to hear you're having trouble with...").
+2. Explain the solution in clear, specific steps, using the EXACT keywords from the knowledge base articles (e.g., use "reset password" not "create new password").
+3. Start each step with an action verb.
+4. Close with a helpful follow-up offer (e.g., "If the issue persists, please reach out again and we'll investigate further.").
+5. Write 4-6 sentences total — a greeting, the steps, and a closing. Do not write a wall of text.
+6. If escalation is needed, end with: "This needs to be escalated to our team."
+7. Do NOT invent facts, prices, or policies that are not present in the knowledge base context."""
 
         try:
             state["resolution"] = self.invoke_with_retry(prompt)

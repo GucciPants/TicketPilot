@@ -5,55 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TicketPilot Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { DEFAULT: '#0F172A', light: '#1E293B', dark: '#020617' },
+                        accent: { DEFAULT: '#0369A1', light: '#0284C7', dark: '#075985' },
+                        surface: { DEFAULT: '#F8FAFC', muted: '#E8ECF1', border: '#E2E8F0' },
+                        success: '#16A34A',
+                        danger: '#DC2626',
+                        warning: '#D97706',
+                    },
+                    fontFamily: {
+                        heading: ['Poppins', 'sans-serif'],
+                        body: ['Open Sans', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-    <style>[x-cloak] { display: none !important; }
-    .resolution-content { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 8px 0; font-size: 0.85rem; line-height: 1.6; }
-    .resolution-content h1,.resolution-content h2,.resolution-content h3 { margin: 12px 0 6px; color: #1e293b; }
-    .resolution-content ul,.resolution-content ol { padding-left: 20px; margin: 6px 0; }
-    .resolution-content p { margin: 6px 0; }
-    .resolution-content strong { font-weight: 600; }
+    <style>
+        [x-cloak] { display: none !important; }
+        body { font-family: 'Open Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
+        .skeleton { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @media (prefers-reduced-motion: reduce) {
+            .skeleton, .animate-pulse, .animate-spin { animation: none !important; }
+            *, *::before, *::after { transition-duration: 0.01ms !important; }
+        }
+        .resolution-content { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 16px; margin: 8px 0; font-size: 0.85rem; line-height: 1.6; }
+        .resolution-content h1,.resolution-content h2,.resolution-content h3 { margin: 12px 0 6px; color: #0F172A; font-family: 'Poppins', sans-serif; }
+        .resolution-content ul,.resolution-content ol { padding-left: 20px; margin: 6px 0; }
+        .resolution-content p { margin: 6px 0; }
+        .resolution-content strong { font-weight: 600; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+<body class="bg-surface text-primary-dark font-body antialiased">
 <div x-data="admin()" x-cloak class="min-h-screen flex">
 
     <!-- Sidebar -->
-    <aside class="w-64 bg-white border-r border-slate-200 p-5 hidden lg:flex flex-col">
+    <aside class="w-64 bg-white border-r border-surface-border p-5 hidden lg:flex flex-col">
         <div class="flex items-center gap-3 mb-8">
-            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">TP</div>
+            <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-heading font-bold text-lg">TP</div>
             <div>
-                <h1 class="font-bold text-lg">TicketPilot</h1>
+                <h1 class="font-heading font-bold text-lg text-primary">TicketPilot</h1>
                 <p class="text-xs text-slate-400">Admin Console</p>
             </div>
         </div>
-        <nav class="flex flex-col gap-1 flex-1">
-            <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <nav class="flex flex-col gap-1">
+            <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-primary transition-all duration-200 hover:translate-x-0.5">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 Dashboard
             </a>
-            <a href="/admin" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-red-50 text-red-700 font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                Escalated
-            </a>
-            <a href="#users" @click.prevent="tab = 'users'" :class="tab === 'users' ? 'bg-slate-100 text-slate-800 font-medium' : 'text-slate-600 hover:bg-slate-50'" class="flex items-center gap-3 px-3 py-2.5 rounded-lg">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>
-                Users
+            <a href="/admin" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-danger/10 text-danger font-medium transition-all duration-200 hover:translate-x-0.5">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Admin
             </a>
         </nav>
-
-        <!-- User info & logout -->
-        <div x-show="user" class="border-t border-slate-100 pt-4">
-            <div class="flex items-center gap-2 px-3 py-2">
-                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-xs" x-text="user.email.charAt(0).toUpperCase()"></div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium truncate" x-text="user.email"></p>
-                    <p class="text-xs text-slate-400 capitalize" x-text="user.role"></p>
-                </div>
-            </div>
-            <button @click="logout" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition">Sign out</button>
-        </div>
     </aside>
 
     <!-- Main -->
@@ -62,277 +78,209 @@
         <!-- Mobile header -->
         <div class="flex items-center justify-between lg:hidden mb-6">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-sm">TP</div>
-                <h1 class="font-bold">Admin</h1>
+                <div class="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white font-heading font-bold text-sm">TP</div>
+                <h1 class="font-heading font-bold text-primary">Admin</h1>
+            </div>
+            <a href="/" class="text-accent text-sm font-medium transition-colors duration-200 hover:text-accent-dark flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                Dashboard
+            </a>
+        </div>
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-2xl font-heading font-bold text-primary flex items-center gap-3">
+                    <span class="w-10 h-10 bg-danger/10 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-danger" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </span>
+                    Escalated Tickets
+                </h2>
+                <p class="text-sm text-slate-500 mt-1 ml-13" x-text="'Human review needed: ' + tickets.length + ' ticket(s)'"></p>
             </div>
             <div class="flex items-center gap-2">
-                <button @click="logout" x-show="user" class="text-red-600 text-sm font-medium">Sign out</button>
-                <a href="/" class="text-blue-600 text-sm font-medium">← Dashboard</a>
+                <span class="w-2 h-2 rounded-full bg-success"></span>
+                <span class="text-xs text-slate-400">Auto-refresh 10s</span>
             </div>
         </div>
 
-        <!-- === Escalated Tickets Tab === -->
-        <div x-show="tab === 'escalated'">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-2xl font-bold">🚨 Escalated Tickets</h2>
-                    <p class="text-sm text-slate-500 mt-1" x-text="'Human review needed: ' + tickets.length + ' ticket(s)'"></p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                    <span class="text-xs text-slate-400">Auto-refresh 10s</span>
-                </div>
-            </div>
+        <!-- Empty state -->
+        <div x-show="!loading && !tickets.length" class="bg-white rounded-xl border border-surface-border p-12 text-center">
+            <svg class="w-16 h-16 mx-auto text-success/30 mb-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p class="text-slate-500 font-medium">No escalated tickets. All resolved!</p>
+            <p class="text-sm text-slate-400 mt-1">Great job! The AI is handling things well.</p>
+        </div>
 
-            <div x-show="!tickets.length" class="bg-white rounded-xl border border-slate-200 p-12 text-center">
-                <p class="text-4xl mb-3">✅</p>
-                <p class="text-slate-500 font-medium">No escalated tickets. All resolved!</p>
-            </div>
-
-            <div class="space-y-4">
-                <template x-for="t in tickets" :key="t.id">
-                    <div class="bg-white rounded-xl border border-red-200 p-5">
-                        <div class="flex items-start justify-between gap-3 mb-3">
-                            <div>
-                                <h3 class="font-bold">Ticket #<span x-text="t.id"></span>
-                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700">escalated</span>
-                                </h3>
-                                <p class="text-sm mt-1" x-text="t.description"></p>
-                                <p x-show="t.user_email" class="text-xs text-slate-400 mt-1" x-text="'by ' + t.user_email"></p>
-                            </div>
+        <!-- Skeleton loading -->
+        <div x-show="loading" class="space-y-4">
+            <template x-for="i in 2" :key="i">
+                <div class="bg-white rounded-xl border border-surface-border p-5">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="flex-1">
+                            <div class="h-5 w-32 bg-surface-muted rounded skeleton mb-2"></div>
+                            <div class="h-4 w-3/4 bg-surface-muted rounded skeleton"></div>
                         </div>
-
-                        <div class="flex flex-wrap gap-2 mb-3" x-show="Object.keys(t.escalation_info || {}).length">
-                            <template x-for="(val, key) in t.escalation_info">
-                                <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-md" x-show="['reason','category','priority'].includes(key)" x-text="key + ': ' + val"></span>
-                            </template>
-                        </div>
-
-                        <details x-show="t.resolution" class="mb-3">
-                            <summary class="text-sm text-blue-600 hover:text-blue-700 cursor-pointer font-medium">📄 View AI resolution (reference)</summary>
-                            <div class="resolution-content mt-2" x-html="renderMD(t.resolution)"></div>
-                        </details>
-
-                        <form @submit.prevent="resolveTicket(t.id)" class="border-t border-slate-100 pt-4">
-                            <label class="font-medium text-sm block mb-2">✏️ Your Resolution:</label>
-                            <textarea x-model="resolutions[t.id]" rows="3" placeholder="Enter resolution..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none" required></textarea>
-                            <div class="flex items-center gap-2 mt-2">
-                                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
-                                        :disabled="resolving === t.id">
-                                    <span x-show="resolving !== t.id">✅ Mark as Resolved</span>
-                                    <span x-show="resolving === t.id">Resolving...</span>
-                                </button>
-                                <span x-show="resolvedId === t.id" class="text-sm text-emerald-600">✅ Resolved!</span>
-                            </div>
-                        </form>
                     </div>
-                </template>
-            </div>
-        </div>
-
-        <!-- === Users Tab === -->
-        <div x-show="tab === 'users'">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-2xl font-bold">👥 Users</h2>
-                    <p class="text-sm text-slate-500 mt-1" x-text="users.length + ' user(s)'"></p>
+                    <div class="flex gap-2 mb-3">
+                        <div class="h-6 w-16 bg-surface-muted rounded skeleton"></div>
+                        <div class="h-6 w-20 bg-surface-muted rounded skeleton"></div>
+                    </div>
+                    <div class="border-t border-surface-border pt-4">
+                        <div class="h-20 w-full bg-surface-muted rounded skeleton"></div>
+                    </div>
                 </div>
-                <button @click="loadUsers" class="text-sm text-blue-600 hover:text-blue-700 font-medium">Refresh</button>
-            </div>
-
-            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                <table class="w-full text-sm">
-                    <thead class="bg-slate-50 border-b border-slate-200">
-                        <tr>
-                            <th class="text-left px-4 py-3 font-medium text-slate-600">ID</th>
-                            <th class="text-left px-4 py-3 font-medium text-slate-600">Email</th>
-                            <th class="text-left px-4 py-3 font-medium text-slate-600">Role</th>
-                            <th class="text-left px-4 py-3 font-medium text-slate-600">Active</th>
-                            <th class="text-left px-4 py-3 font-medium text-slate-600">Created</th>
-                            <th class="text-left px-4 py-3 font-medium text-slate-600">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        <template x-for="u in users" :key="u.id">
-                            <tr>
-                                <td class="px-4 py-3 text-slate-500 font-mono" x-text="u.id"></td>
-                                <td class="px-4 py-3 font-medium" x-text="u.email"></td>
-                                <td class="px-4 py-3">
-                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
-                                          :class="roleClass(u.role)" x-text="u.role"></span>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <span x-text="u.is_active ? '✅' : '❌'"></span>
-                                </td>
-                                <td class="px-4 py-3 text-slate-500 text-xs" x-text="u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'"></td>
-                                <td class="px-4 py-3">
-                                    <select x-show="user && user.id !== u.id" x-model="u.role" @change="changeRole(u.id, u.role)"
-                                            class="text-xs border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none">
-                                        <option value="customer">customer</option>
-                                        <option value="agent">agent</option>
-                                        <option value="admin">admin</option>
-                                    </select>
-                                    <span x-show="user && user.id === u.id" class="text-xs text-slate-400">(you)</span>
-                                </td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
-            </div>
-            <p x-show="roleError" class="text-sm text-red-600 mt-3" x-text="roleError"></p>
-            <p x-show="roleSuccess" class="text-sm text-emerald-600 mt-3" x-text="roleSuccess"></p>
+            </template>
         </div>
 
+        <!-- Ticket list -->
+        <div x-show="!loading" class="space-y-4">
+            <template x-for="t in tickets" :key="t.id">
+                <div class="bg-white rounded-xl border border-danger/20 p-5 transition-all duration-200 hover:border-danger/40 hover:shadow-sm hover:-translate-y-0.5">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div>
+                            <h3 class="font-heading font-bold text-primary flex items-center gap-2">
+                                Ticket #<span x-text="t.id"></span>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-danger/10 text-danger">escalated</span>
+                            </h3>
+                            <p class="text-sm text-slate-600 mt-1" x-text="t.description"></p>
+                        </div>
+                    </div>
+
+                    <!-- Meta badges -->
+                    <div class="flex flex-wrap gap-2 mb-3" x-show="Object.keys(t.escalation_info || {}).length">
+                        <template x-for="(val, key) in t.escalation_info">
+                            <span class="text-xs bg-surface text-slate-600 px-2 py-1 rounded-md border border-surface-border flex items-center gap-1"
+                                  x-show="['reason','category','priority'].includes(key)">
+                                <svg x-show="key === 'reason'" class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <svg x-show="key === 'category'" class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                                <svg x-show="key === 'priority'" class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+                                <span x-text="key + ': ' + val"></span>
+                            </span>
+                        </template>
+                    </div>
+
+                    <!-- AI resolution collapsible -->
+                    <details x-show="t.resolution" class="mb-3" x-data="{ open: false }">
+                        <summary @click="open = !open" class="text-sm text-accent hover:text-accent-dark cursor-pointer font-medium flex items-center gap-2 transition-colors duration-200">
+                            <svg class="w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-90' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                            View AI resolution (reference)
+                        </summary>
+                        <div class="resolution-content mt-2" x-html="renderMD(t.resolution)"></div>
+                    </details>
+
+                    <!-- Resolve form -->
+                    <form @submit.prevent="resolveTicket(t.id)" class="border-t border-surface-border pt-4">
+                        <label class="font-heading font-medium text-sm block mb-2 text-primary">Your Resolution:</label>
+                        <textarea x-model="resolutions[t.id]" rows="3" placeholder="Enter resolution..." class="w-full border border-surface-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none resize-none transition-all duration-200" required></textarea>
+                        <div class="flex items-center gap-2 mt-2">
+                            <button type="submit" class="bg-success hover:bg-success/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-sm active:scale-95"
+                                    :disabled="resolving === t.id">
+                                <span x-show="resolving !== t.id" class="flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    Mark as Resolved
+                                </span>
+                                <span x-show="resolving === t.id" class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                                    Resolving...
+                                </span>
+                            </button>
+                            <span x-show="resolvedId === t.id" x-transition class="text-sm text-success flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                Resolved!
+                            </span>
+                        </div>
+                    </form>
+                </div>
+            </template>
+        </div>
     </main>
+
+    <!-- Toast notifications -->
+    <div role="status" aria-live="polite" class="fixed top-4 right-4 z-50 w-80 max-w-[calc(100vw-2rem)] space-y-2 pointer-events-none">
+        <template x-for="toast in toasts" :key="toast.id">
+            <div x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 translate-x-4"
+                 x-transition:enter-end="opacity-100 translate-x-0"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 translate-x-0"
+                 x-transition:leave-end="opacity-0 translate-x-4"
+                 @click="removeToast(toast.id)"
+                 class="pointer-events-auto bg-white rounded-xl border shadow-lg p-3.5 flex items-start gap-2.5 cursor-pointer"
+                 :class="toast.type === 'error' ? 'border-danger/30' : toast.type === 'info' ? 'border-accent/30' : 'border-success/30'">
+                <div class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center"
+                     :class="toast.type === 'error' ? 'bg-danger/10 text-danger' : toast.type === 'info' ? 'bg-accent/10 text-accent' : 'bg-success/10 text-success'">
+                    <svg x-show="toast.type === 'success'" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    <svg x-show="toast.type === 'error'" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <svg x-show="toast.type === 'info'" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <p class="text-sm text-primary-dark flex-1 leading-snug" x-text="toast.message"></p>
+                <svg class="shrink-0 w-4 h-4 text-slate-300 hover:text-slate-500 transition-colors duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </div>
+        </template>
+    </div>
 </div>
 
 <script>
 function admin() {
     return {
-        user: null,
-        tab: 'escalated',
         tickets: [],
         resolutions: {},
         resolving: null,
         resolvedId: null,
+        loading: true,
         timer: null,
-
-        // Users
-        users: [],
-        roleError: '',
-        roleSuccess: '',
+        toasts: [],
+        toastId: 0,
 
         init() {
-            const token = this.getToken();
-            if (!token) {
-                window.location.href = '/';
-                return;
-            }
-            this.fetchUser().then(() => {
-                if (this.user.role === 'customer') {
-                    window.location.href = '/';
-                    return;
-                }
-                this.load();
-                this.loadUsers();
-                this.timer = setInterval(() => this.load(), 10000);
-            }).catch(() => {
-                this.clearToken();
-                window.location.href = '/';
-            });
+            this.load();
+            this.timer = setInterval(() => this.load(), 10000);
         },
 
-        // ── Auth ─────────────────────────────────────────
-
-        getToken() {
-            const fromUrl = new URLSearchParams(window.location.search).get('token');
-            if (fromUrl) {
-                localStorage.setItem('tp_token', fromUrl);
-                // Clean URL without reload
-                history.replaceState({}, '', '/admin');
-            }
-            return localStorage.getItem('tp_token');
+        addToast(message, type = 'success') {
+            const id = ++this.toastId;
+            this.toasts.push({ id, message, type });
+            setTimeout(() => this.removeToast(id), 4000);
         },
 
-        clearToken() {
-            localStorage.removeItem('tp_token');
-            this.user = null;
+        removeToast(id) {
+            this.toasts = this.toasts.filter(t => t.id !== id);
         },
-
-        authHeaders() {
-            const token = this.getToken();
-            return token ? { 'Authorization': 'Bearer ' + token } : {};
-        },
-
-        async fetchUser() {
-            const res = await fetch('/api/v1/auth/me', { headers: this.authHeaders() });
-            if (res.ok) {
-                this.user = await res.json();
-            } else {
-                throw new Error('Not authenticated');
-            }
-        },
-
-        logout() {
-            this.clearToken();
-            window.location.href = '/';
-        },
-
-        // ── Escalated tickets ────────────────────────────
 
         renderMD(text) {
             try { return DOMPurify.sanitize(marked.parse(text || '')); } catch(e) { return ''; }
         },
 
-        roleClass(role) {
-            return {
-                admin: 'bg-purple-50 text-purple-700',
-                agent: 'bg-blue-50 text-blue-700',
-                customer: 'bg-slate-50 text-slate-600'
-            }[role] || 'bg-slate-50 text-slate-600';
-        },
-
         async load() {
             try {
-                const res = await fetch('/api/v1/tickets?status=escalated', { headers: this.authHeaders() });
-                if (!res.ok) throw new Error('API Error ' + res.status);
-                this.tickets = (await res.json()).tickets || [];
-            } catch(e) { console.warn('Load error', e); }
+                const r = await fetch('/api/v1/tickets?status=escalated');
+                if (!r.ok) throw new Error('API Error ' + r.status);
+                this.tickets = (await r.json()).tickets || [];
+                this.loading = false;
+            } catch(e) { console.warn('Load error', e); this.loading = false; }
         },
 
         async resolveTicket(id) {
             this.resolving = id;
             try {
-                const res = await fetch('/api/v1/tickets/' + id + '/resolve', {
+                const r = await fetch('/api/v1/tickets/' + id + '/resolve', {
                     method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json', ...this.authHeaders() },
-                    body: JSON.stringify({ resolution: this.resolutions[id] || '' })
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({resolution: this.resolutions[id] || ''})
                 });
-                if (res.ok) {
+                if (r.ok) {
                     this.resolvedId = id;
+                    this.addToast('Ticket #' + id + ' resolved', 'success');
                     setTimeout(() => { this.resolvedId = null; this.load(); }, 1500);
                 } else {
-                    const err = await res.json();
-                    alert('Error: ' + (err.detail || 'Unknown'));
+                    const err = await r.json();
+                    this.addToast('Error: ' + (err.detail || 'Unknown'), 'error');
                 }
-            } catch(e) { alert('Error: ' + e.message); }
+            } catch(e) { this.addToast('Error: ' + e.message, 'error'); }
             finally { this.resolving = null; }
-        },
-
-        // ── User management ──────────────────────────────
-
-        async loadUsers() {
-            try {
-                const res = await fetch('/api/v1/auth/admin/users', { headers: this.authHeaders() });
-                if (res.ok) {
-                    this.users = await res.json();
-                }
-            } catch(e) { console.warn('Load users error', e); }
-        },
-
-        async changeRole(userId, newRole) {
-            this.roleError = '';
-            this.roleSuccess = '';
-            try {
-                const res = await fetch('/api/v1/auth/admin/users/' + userId + '/role', {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json', ...this.authHeaders() },
-                    body: JSON.stringify({ role: newRole })
-                });
-                if (res.ok) {
-                    this.roleSuccess = '✅ Role updated';
-                    setTimeout(() => this.roleSuccess = '', 3000);
-                } else {
-                    const err = await res.json();
-                    this.roleError = '❌ ' + (err.detail || 'Failed to update role');
-                }
-            } catch(e) {
-                this.roleError = '❌ Network error';
-            }
         }
     }
 }
 </script>
 </body>
-</html>
 </html>

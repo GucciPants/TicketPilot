@@ -5,48 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TicketPilot</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { DEFAULT: '#0F172A', light: '#1E293B', dark: '#020617' },
+                        accent: { DEFAULT: '#0369A1', light: '#0284C7', dark: '#075985' },
+                        surface: { DEFAULT: '#F8FAFC', muted: '#E8ECF1', border: '#E2E8F0' },
+                        success: '#16A34A',
+                        danger: '#DC2626',
+                        warning: '#D97706',
+                    },
+                    fontFamily: {
+                        heading: ['Poppins', 'sans-serif'],
+                        body: ['Open Sans', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-    <style>[x-cloak] { display: none !important; }</style>
+    <style>
+        [x-cloak] { display: none !important; }
+        body { font-family: 'Open Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
+        .skeleton { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @media (prefers-reduced-motion: reduce) {
+            .skeleton, .animate-pulse, .animate-spin { animation: none !important; }
+            *, *::before, *::after { transition-duration: 0.01ms !important; }
+        }
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+<body class="bg-surface text-primary-dark font-body antialiased">
 <div x-data="app()" x-cloak class="min-h-screen flex">
 
     <!-- Sidebar -->
-    <aside class="w-64 bg-white border-r border-slate-200 p-5 hidden lg:flex flex-col">
+    <aside class="w-64 bg-white border-r border-surface-border p-5 hidden lg:flex flex-col">
         <div class="flex items-center gap-3 mb-8">
-            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">TP</div>
+            <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-heading font-bold text-lg">TP</div>
             <div>
-                <h1 class="font-bold text-lg">TicketPilot</h1>
+                <h1 class="font-heading font-bold text-lg text-primary">TicketPilot</h1>
                 <p class="text-xs text-slate-400">AI Support System</p>
             </div>
         </div>
         <nav class="flex flex-col gap-1 flex-1">
-            <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-blue-50 text-blue-700 font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-accent/10 text-accent font-medium transition-all duration-200 hover:translate-x-0.5">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 Dashboard
             </a>
-            <a href="/admin" x-show="user && user.role !== 'customer'" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <a href="/admin" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-primary transition-all duration-200 hover:translate-x-0.5">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 Admin
             </a>
         </nav>
-
-        <!-- User info & logout -->
-        <div x-show="user" class="border-t border-slate-100 pt-4 mb-2">
-            <div class="flex items-center gap-2 px-3 py-2">
-                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold text-xs" x-text="user.email.charAt(0).toUpperCase()"></div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium truncate" x-text="user.email"></p>
-                    <p class="text-xs text-slate-400 capitalize" x-text="user.role"></p>
-                </div>
-            </div>
-            <button @click="logout" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition">Sign out</button>
-        </div>
-
-        <div class="flex items-center gap-2 px-3 py-2 text-xs text-slate-400 border-t border-slate-100 pt-4">
-            <span class="w-2 h-2 rounded-full" :class="sseConnected ? 'bg-green-500' : 'bg-red-400'"></span>
+        <div class="flex items-center gap-2 px-3 py-2 text-xs text-slate-400 border-t border-surface-border pt-4">
+            <span class="w-2 h-2 rounded-full transition-colors duration-200" :class="sseConnected ? 'bg-success' : 'bg-danger'"></span>
             <span x-text="sseConnected ? 'Live' : 'Polling'"></span>
         </div>
     </aside>
@@ -57,130 +77,114 @@
         <!-- Mobile header -->
         <div class="flex items-center justify-between lg:hidden mb-6">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-sm">TP</div>
-                <h1 class="font-bold">TicketPilot</h1>
+                <div class="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white font-heading font-bold text-sm">TP</div>
+                <h1 class="font-heading font-bold text-primary">TicketPilot</h1>
             </div>
             <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full" :class="sseConnected ? 'bg-green-500' : 'bg-red-400'"></span>
+                <span class="w-2 h-2 rounded-full transition-colors duration-200" :class="sseConnected ? 'bg-success' : 'bg-danger'"></span>
                 <span class="text-xs text-slate-400" x-text="sseConnected ? 'Live' : 'Polling'"></span>
-                <a href="/admin" x-show="user && user.role !== 'customer'" class="text-blue-600 text-sm font-medium ml-2">Admin →</a>
-                <button @click="logout" x-show="user" class="text-red-600 text-sm font-medium ml-2">Sign out</button>
-            </div>
-        </div>
-
-        <!-- Login / Register Modal -->
-        <div x-show="!user" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">TP</div>
-                    <div>
-                        <h2 class="font-bold text-xl" x-text="showLogin ? 'Sign In' : 'Create Account'"></h2>
-                        <p class="text-sm text-slate-400">TicketPilot</p>
-                    </div>
-                </div>
-
-                <!-- Login form -->
-                <form x-show="showLogin" @submit.prevent="login" class="space-y-4">
-                    <div>
-                        <label class="text-sm font-medium text-slate-700">Email</label>
-                        <input x-model="authEmail" type="email" required class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none mt-1" placeholder="you@example.com">
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-700">Password</label>
-                        <input x-model="authPassword" type="password" required class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none mt-1" placeholder="••••••">
-                    </div>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm transition" :disabled="authLoading">
-                        <span x-show="!authLoading">Sign In</span>
-                        <span x-show="authLoading">Signing in...</span>
-                    </button>
-                    <p class="text-sm text-center text-slate-500">
-                        No account?
-                        <a @click.prevent="showLogin = false" href="#" class="text-blue-600 hover:underline font-medium">Register</a>
-                    </p>
-                    <p x-show="authError" class="text-sm text-red-600 text-center" x-text="authError"></p>
-                </form>
-
-                <!-- Register form -->
-                <form x-show="!showLogin" @submit.prevent="register" class="space-y-4">
-                    <div>
-                        <label class="text-sm font-medium text-slate-700">Email</label>
-                        <input x-model="authEmail" type="email" required class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none mt-1" placeholder="you@example.com">
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-700">Password</label>
-                        <input x-model="authPassword" type="password" required minlength="6" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none mt-1" placeholder="At least 6 characters">
-                    </div>
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg text-sm transition" :disabled="authLoading">
-                        <span x-show="!authLoading">Create Account</span>
-                        <span x-show="authLoading">Creating account...</span>
-                    </button>
-                    <p class="text-sm text-center text-slate-500">
-                        Already have an account?
-                        <a @click.prevent="showLogin = true" href="#" class="text-blue-600 hover:underline font-medium">Sign In</a>
-                    </p>
-                    <p x-show="authError" class="text-sm text-red-600 text-center" x-text="authError"></p>
-                </form>
-
-                <p class="text-xs text-slate-400 text-center mt-4">Demo: admin@ticketpilot.app / admin123</p>
+                <a href="/admin" class="text-accent text-sm font-medium ml-2 transition-colors duration-200 hover:text-accent-dark">Admin</a>
             </div>
         </div>
 
         <!-- Stat cards -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            <div class="bg-white rounded-xl border border-slate-200 p-5">
-                <p class="text-sm text-slate-500 font-medium">Total Tickets</p>
-                <p class="text-3xl font-bold mt-1" x-text="stats.total">0</p>
+            <div class="bg-white rounded-xl border border-surface-border p-5 transition-all duration-200 hover:border-accent/30 hover:-translate-y-1 hover:shadow-md"
+                 :class="cardFlash === 'total' ? 'scale-105 border-accent/40 shadow-md' : ''">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium uppercase tracking-wide">Total Tickets</p>
+                        <p class="text-2xl font-heading font-bold text-primary" x-text="displayTotal">0</p>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white rounded-xl border border-slate-200 p-5">
-                <p class="text-sm text-slate-500 font-medium">Resolved</p>
-                <p class="text-3xl font-bold mt-1 text-emerald-600" x-text="stats.resolved">0</p>
+            <div class="bg-white rounded-xl border border-surface-border p-5 transition-all duration-200 hover:border-success/30 hover:-translate-y-1 hover:shadow-md"
+                 :class="cardFlash === 'resolved' ? 'scale-105 border-success/40 shadow-md' : ''">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium uppercase tracking-wide">Resolved</p>
+                        <p class="text-2xl font-heading font-bold text-success" x-text="displayResolved">0</p>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white rounded-xl border border-slate-200 p-5">
-                <p class="text-sm text-slate-500 font-medium">Escalated</p>
-                <p class="text-3xl font-bold mt-1 text-red-500" x-text="stats.escalated">0</p>
+            <div class="bg-white rounded-xl border border-surface-border p-5 transition-all duration-200 hover:border-danger/30 hover:-translate-y-1 hover:shadow-md"
+                 :class="cardFlash === 'escalated' ? 'scale-105 border-danger/40 shadow-md' : ''">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-danger/10 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-danger" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium uppercase tracking-wide">Escalated</p>
+                        <p class="text-2xl font-heading font-bold text-danger" x-text="displayEscalated">0</p>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Create ticket -->
-        <div class="bg-white rounded-xl border border-slate-200 p-5 mb-8">
+        <div class="bg-white rounded-xl border border-surface-border p-5 mb-8">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="font-semibold text-lg">Create Ticket</h2>
-                <button @click="showForm = !showForm" class="text-sm text-blue-600 hover:text-blue-700 font-medium" x-text="showForm ? 'Collapse' : 'Expand'">Expand</button>
+                <h2 class="font-heading font-semibold text-lg text-primary">Create Ticket</h2>
+                <button @click="showForm = !showForm" class="text-sm text-accent hover:text-accent-dark font-medium transition-colors duration-200" x-text="showForm ? 'Collapse' : 'Expand'">Expand</button>
             </div>
-            <form x-show="showForm" @submit.prevent="createTicket" class="space-y-4">
-                <textarea x-model="newTicketDesc" rows="3" placeholder="Describe the issue..." class="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none" required></textarea>
+            <form x-show="showForm" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" @submit.prevent="createTicket" class="space-y-4">
+                <textarea x-model="newTicketDesc" rows="3" placeholder="Describe the issue..." class="w-full border border-surface-border rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none resize-none transition-all duration-200" required></textarea>
                 <div class="flex items-center gap-3">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition" :disabled="sending">
-                        <span x-show="!sending">Submit Ticket</span>
-                        <span x-show="sending">Submitting...</span>
+                    <button type="submit" class="bg-accent hover:bg-accent-dark text-white px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 active:scale-95" :disabled="sending">
+                        <span x-show="!sending" class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                            Submit Ticket
+                        </span>
+                        <span x-show="sending" class="flex items-center gap-2">
+                            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                            Submitting...
+                        </span>
                     </button>
-                    <span x-show="lastCreated" class="text-sm text-emerald-600" x-text="'✅ Ticket #' + lastCreated + ' created'"></span>
+                    <span x-show="lastCreated" x-transition class="text-sm text-success flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        Ticket #<span x-text="lastCreated"></span> created
+                    </span>
                 </div>
             </form>
         </div>
 
         <!-- Knowledge base + Search row -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-            <div class="bg-white rounded-xl border border-slate-200 p-5">
-                <h3 class="font-semibold mb-3">Knowledge Base</h3>
-                <button @click="ingestKB" class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition" :disabled="ingesting">
-                    <span x-show="!ingesting">📥 Ingest Sample KB</span>
-                    <span x-show="ingesting">Ingesting...</span>
+            <div class="bg-white rounded-xl border border-surface-border p-5">
+                <h3 class="font-heading font-semibold text-primary mb-3">Knowledge Base</h3>
+                <button @click="ingestKB" class="bg-primary hover:bg-primary-light text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-sm active:scale-95" :disabled="ingesting">
+                    <span x-show="!ingesting" class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        Ingest Sample KB
+                    </span>
+                    <span x-show="ingesting" class="flex items-center gap-2">
+                        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                        Ingesting...
+                    </span>
                 </button>
-                <p x-show="kbResult" class="text-sm text-emerald-600 mt-2" x-text="kbResult"></p>
+                <p x-show="kbResult" x-transition class="text-sm text-success mt-2" x-text="kbResult"></p>
             </div>
-            <div class="bg-white rounded-xl border border-slate-200 p-5">
-                <h3 class="font-semibold mb-3">Search KB</h3>
+            <div class="bg-white rounded-xl border border-surface-border p-5">
+                <h3 class="font-heading font-semibold text-primary mb-3">Search KB</h3>
                 <div class="flex gap-2">
-                    <input x-model="searchQuery" @keydown.enter="searchKB" type="text" placeholder="Search..." class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                    <button @click="searchKB" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Search</button>
+                    <input x-model="searchQuery" @keydown.enter="searchKB" type="text" placeholder="Search..." class="flex-1 border border-surface-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all duration-200">
+                    <button @click="searchKB" class="bg-accent hover:bg-accent-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-sm active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        Search
+                    </button>
                 </div>
                 <div x-show="searchResults.length" class="mt-3 space-y-2">
                     <template x-for="doc in searchResults" :key="doc.doc_id">
-                        <div class="text-sm bg-slate-50 rounded-lg p-3 border border-slate-100">
+                        <div class="text-sm bg-surface rounded-lg p-3 border border-surface-border transition-all duration-200 hover:border-accent/30">
                             <p class="font-medium text-xs text-slate-500" x-text="doc.doc_id"></p>
-                            <p class="mt-1" x-text="doc.text.substring(0, 150) + '...'"></p>
-                            <p class="text-xs text-slate-400 mt-1">Score: <span x-text="(doc.score ?? 0).toFixed(3)"></span></p>
+                            <p class="mt-1 text-primary-dark" x-text="doc.text.substring(0, 150) + '...'"></p>
+                            <p class="text-xs text-slate-400 mt-1">Score: <span class="font-medium text-accent" x-text="(doc.score ?? 0).toFixed(3)"></span></p>
                         </div>
                     </template>
                 </div>
@@ -188,31 +192,109 @@
         </div>
 
         <!-- Tickets -->
-        <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="bg-white rounded-xl border border-surface-border p-5">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="font-semibold text-lg">Recent Tickets</h2>
-                <span class="text-xs text-slate-400" x-text="'Auto-refreshing via ' + (sseConnected ? 'SSE' : 'polling')"></span>
+                <h2 class="font-heading font-semibold text-lg text-primary">Recent Tickets</h2>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full transition-colors duration-200" :class="sseConnected ? 'bg-success' : 'bg-danger'"></span>
+                    <span class="text-xs text-slate-400" x-text="sseConnected ? 'Live via SSE' : 'Polling'"></span>
+                </div>
             </div>
-            <div x-show="!tickets.length" class="text-center py-10 text-slate-400 text-sm">No tickets yet. Create one above!</div>
-            <div class="space-y-3">
+
+            <!-- Skeleton loading -->
+            <div x-show="loading" class="space-y-3">
+                <template x-for="i in 3" :key="i">
+                    <div class="border border-surface-border rounded-lg p-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <div class="h-4 w-12 bg-surface-muted rounded skeleton"></div>
+                                    <div class="h-5 w-16 bg-surface-muted rounded-full skeleton"></div>
+                                </div>
+                                <div class="h-4 w-3/4 bg-surface-muted rounded skeleton mb-2"></div>
+                                <div class="h-3 w-1/4 bg-surface-muted rounded skeleton"></div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Empty state -->
+            <div x-show="!loading && !tickets.length" class="text-center py-12">
+                <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <p class="text-slate-400 text-sm">No tickets yet. Create one above!</p>
+            </div>
+
+            <!-- Ticket list -->
+            <div x-show="!loading" class="space-y-3">
                 <template x-for="t in tickets" :key="t.id">
-                    <div class="border border-slate-100 rounded-lg p-4 hover:border-slate-200 transition">
+                    <div @click="toggleTicket(t.id)" @keydown.enter.prevent="toggleTicket(t.id)" @keydown.space.prevent="toggleTicket(t.id)" role="button" tabindex="0" 
+                         :aria-expanded="expandedTicket === t.id ? 'true' : 'false'"
+                         class="border border-surface-border rounded-lg p-4 transition-all duration-200 hover:border-accent/30 hover:-translate-y-0.5 hover:shadow-sm cursor-pointer"
+                         :class="flashClass(t)">
                         <div class="flex items-start justify-between gap-3">
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1">
                                     <span class="text-xs font-mono text-slate-400">#<span x-text="t.id"></span></span>
                                     <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
                                           :class="statusClass(t.status)" x-text="t.status"></span>
+                                    <!-- Category badge -->
+                                    <span x-show="t.escalation_info?.category" class="text-xs font-medium px-2 py-0.5 rounded-full bg-accent/10 text-accent">
+                                        <span x-text="t.escalation_info?.category"></span>
+                                    </span>
+                                    <!-- Priority badge -->
+                                    <span x-show="t.escalation_info?.priority" class="text-xs font-medium px-2 py-0.5 rounded-full"
+                                          :class="priorityClass(t.escalation_info?.priority)">
+                                        <span x-text="t.escalation_info?.priority"></span>
+                                    </span>
                                     <span x-show="t.resolved_by" class="text-xs text-slate-400" x-text="'by ' + t.resolved_by"></span>
                                     <span x-show="t.user_email" class="text-xs text-slate-400" x-text="t.user_email"></span>
                                 </div>
-                                <p class="text-sm font-medium truncate" x-text="t.description"></p>
-                                <div x-show="['resolved','escalated'].includes(t.status) && t.resolution"
-                                     class="mt-2 text-sm resolution-content" x-html="renderMD(t.resolution)"></div>
-                                <p x-show="t.status === 'open'" class="text-xs text-slate-400 mt-2">⏳ Processing...</p>
-                                <p class="text-xs text-slate-400 mt-2" x-text="'Created: ' + t.created_at"></p>
+                                <p class="text-sm font-medium text-primary" :class="expandedTicket === t.id ? '' : 'truncate'" x-text="t.description"></p>
+
+                                <!-- Live agent pipeline (open tickets) -->
+                                <div x-show="t.status === 'open'" class="mt-3">
+                                    <div class="flex items-center">
+                                        <template x-for="(step, i) in pipelineSteps" :key="step.label">
+                                            <div class="flex items-center flex-1">
+                                                <div class="flex flex-col items-center">
+                                                    <div class="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300"
+                                                         :class="pipelinePhaseOf(t.id) >= i ? 'bg-accent text-white animate-pulse shadow-[0_0_12px_rgba(3,105,161,0.4)]' : 'bg-surface-muted text-slate-400'">
+                                                        <svg x-show="step.icon === 'router'" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                                                        <svg x-show="step.icon === 'context'" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 1.657 3.582 3 8 3s8-1.343 8-3V7M4 7c0 1.657 3.582 3 8 3s8-1.343 8-3M4 7c0-1.657 3.582-3 8-3s8 1.343 8 3"/></svg>
+                                                        <svg x-show="step.icon === 'resolver'" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/></svg>
+                                                        <svg x-show="step.icon === 'quality'" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                                    </div>
+                                                    <span class="text-[10px] font-medium mt-1 transition-colors duration-300"
+                                                          :class="pipelinePhaseOf(t.id) >= i ? 'text-accent' : 'text-slate-400'" x-text="step.label"></span>
+                                                </div>
+                                                <div x-show="i < pipelineSteps.length - 1" class="flex-1 h-0.5 mx-1 rounded transition-colors duration-300"
+                                                     :class="pipelinePhaseOf(t.id) > i ? 'bg-accent' : 'bg-surface-muted'"></div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                                
+                                <!-- Expanded content -->
+                                <div x-show="expandedTicket === t.id" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 max-h-0" x-transition:enter-end="opacity-100 max-h-96" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 max-h-96" x-transition:leave-end="opacity-0 max-h-0" class="overflow-hidden">
+                                    <div x-show="['resolved','escalated'].includes(t.status) && t.resolution"
+                                         class="mt-3 text-sm text-slate-600 bg-surface rounded-lg p-3 border border-surface-border" x-html="renderMD(t.resolution)"></div>
+                                    <p class="text-xs text-slate-400 mt-3" x-text="'Created: ' + t.created_at"></p>
+                                    
+                                    <!-- Escalated ticket actions -->
+                                    <div x-show="t.status === 'escalated'" class="mt-3 pt-3 border-t border-surface-border">
+                                        <button @click.stop="openAdmin(t.id)" class="text-xs bg-danger/10 text-danger hover:bg-danger/20 px-3 py-1.5 rounded-lg font-medium transition-all duration-200 flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                            Review in Admin
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <button x-show="t.status === 'escalated' && user && user.role !== 'customer'" @click="openAdmin(t.id)" class="shrink-0 text-xs font-medium text-blue-600 hover:text-blue-800 underline underline-offset-2 transition">Review →</button>
+                            
+                            <!-- Expand indicator -->
+                            <div class="shrink-0 text-slate-300 transition-transform duration-200" :class="expandedTicket === t.id ? 'rotate-180' : ''">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
                         </div>
                     </div>
                 </template>
@@ -220,190 +302,200 @@
         </div>
 
     </main>
+
+    <!-- Toast notifications -->
+    <div role="status" aria-live="polite" class="fixed top-4 right-4 z-50 w-80 max-w-[calc(100vw-2rem)] space-y-2 pointer-events-none">
+        <template x-for="toast in toasts" :key="toast.id">
+            <div x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 translate-x-4"
+                 x-transition:enter-end="opacity-100 translate-x-0"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 translate-x-0"
+                 x-transition:leave-end="opacity-0 translate-x-4"
+                 @click="removeToast(toast.id)"
+                 class="pointer-events-auto bg-white rounded-xl border shadow-lg p-3.5 flex items-start gap-2.5 cursor-pointer"
+                 :class="toast.type === 'error' ? 'border-danger/30' : toast.type === 'info' ? 'border-accent/30' : 'border-success/30'">
+                <div class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center"
+                     :class="toast.type === 'error' ? 'bg-danger/10 text-danger' : toast.type === 'info' ? 'bg-accent/10 text-accent' : 'bg-success/10 text-success'">
+                    <svg x-show="toast.type === 'success'" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    <svg x-show="toast.type === 'error'" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <svg x-show="toast.type === 'info'" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <p class="text-sm text-primary-dark flex-1 leading-snug" x-text="toast.message"></p>
+                <svg class="shrink-0 w-4 h-4 text-slate-300 hover:text-slate-500 transition-colors duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </div>
+        </template>
+    </div>
 </div>
 
 <script>
 function app() {
     return {
-        // Auth
-        user: null,
-        showLogin: true,
-        authEmail: '',
-        authPassword: '',
-        authLoading: false,
-        authError: '',
-
-        // Tickets
         tickets: [],
         stats: { total: 0, resolved: 0, escalated: 0 },
+        loading: true,
         showForm: true,
         newTicketDesc: '',
         sending: false,
         lastCreated: null,
-
-        // KB
         ingesting: false,
         kbResult: '',
         searchQuery: '',
         searchResults: [],
-
-        // SSE
         sseConnected: false,
         sse: null,
         pollingTimer: null,
+        expandedTicket: null,
+        // Animated stat counters
+        displayTotal: 0,
+        displayResolved: 0,
+        displayEscalated: 0,
+        cardFlash: null,
+        // Live agent pipeline
+        pipelineSteps: [
+            { icon: 'router', label: 'Routing' },
+            { icon: 'context', label: 'Context' },
+            { icon: 'resolver', label: 'Resolving' },
+            { icon: 'quality', label: 'QA' }
+        ],
+        pipelinePhases: {},
+        pipelineTimers: {},
+        // Status change flash
+        flashState: null,
+        // Toasts
+        toasts: [],
+        toastId: 0,
+        prefersReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
 
         init() {
-            const token = this.getToken();
-            if (token) {
-                this.fetchUser().then(() => {
-                    this.connectSSE();
-                }).catch(() => {
-                    this.clearToken();
-                });
-            }
-            // Poll for user if not logged in (modal stays visible)
-            if (!this.getToken()) {
-                // Still connect SSE for anonymous view
-                this.connectSSE();
-            }
-        },
-
-        // ── Auth helpers ─────────────────────────────────
-
-        getToken() {
-            return localStorage.getItem('tp_token');
-        },
-
-        setToken(token) {
-            localStorage.setItem('tp_token', token);
-        },
-
-        clearToken() {
-            localStorage.removeItem('tp_token');
-            this.user = null;
-        },
-
-        authHeaders() {
-            const token = this.getToken();
-            return token ? { 'Authorization': 'Bearer ' + token } : {};
-        },
-
-        async authFetch(url, options = {}) {
-            const headers = { ...this.authHeaders(), ...options.headers };
-            const res = await fetch(url, { ...options, headers });
-            if (res.status === 401 && this.getToken()) {
-                // Token expired or invalid
-                this.clearToken();
-                // Modal will show on next render
-            }
-            return res;
-        },
-
-        async fetchUser() {
-            const res = await this.authFetch('/api/v1/auth/me');
-            if (res.ok) {
-                this.user = await res.json();
-            } else {
-                throw new Error('Not authenticated');
-            }
-        },
-
-        async login() {
-            this.authLoading = true;
-            this.authError = '';
-            try {
-                const res = await fetch('/api/v1/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: this.authEmail, password: this.authPassword })
-                });
-                if (!res.ok) {
-                    const err = await res.json();
-                    this.authError = err.detail || 'Login failed';
-                    return;
-                }
-                const data = await res.json();
-                this.setToken(data.access_token);
-                this.user = data.user;
-                this.authEmail = '';
-                this.authPassword = '';
-                // Reconnect SSE with token
-                this.reconnectSSE();
-            } catch (e) {
-                this.authError = 'Network error. Is the server running?';
-            } finally {
-                this.authLoading = false;
-            }
-        },
-
-        async register() {
-            this.authLoading = true;
-            this.authError = '';
-            try {
-                const res = await fetch('/api/v1/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: this.authEmail, password: this.authPassword })
-                });
-                if (!res.ok) {
-                    const err = await res.json();
-                    this.authError = err.detail || 'Registration failed';
-                    return;
-                }
-                const data = await res.json();
-                this.setToken(data.access_token);
-                this.user = data.user;
-                this.authEmail = '';
-                this.authPassword = '';
-                this.reconnectSSE();
-            } catch (e) {
-                this.authError = 'Network error. Is the server running?';
-            } finally {
-                this.authLoading = false;
-            }
-        },
-
-        logout() {
-            this.clearToken();
-            this.closeSSE();
-            this.tickets = [];
-            this.stats = { total: 0, resolved: 0, escalated: 0 };
             this.connectSSE();
+            // Watch stats for animated counters
+            this.$watch('stats.total', (val) => this.onStatChange('total', 'displayTotal', val));
+            this.$watch('stats.resolved', (val) => this.onStatChange('resolved', 'displayResolved', val));
+            this.$watch('stats.escalated', (val) => this.onStatChange('escalated', 'displayEscalated', val));
         },
 
-        // ── SSE ──────────────────────────────────────────
-
-        closeSSE() {
-            if (this.sse) {
-                this.sse.close();
-                this.sse = null;
-            }
-            if (this.pollingTimer) {
-                clearInterval(this.pollingTimer);
-                this.pollingTimer = null;
-            }
-            this.sseConnected = false;
+        onStatChange(field, displayField, target) {
+            this.animateCount(displayField, target);
+            this.cardFlash = field;
+            clearTimeout(this._cardFlashTimer);
+            this._cardFlashTimer = setTimeout(() => { this.cardFlash = null; }, 350);
         },
 
-        reconnectSSE() {
-            this.closeSSE();
-            this.connectSSE();
+        animateCount(displayField, target) {
+            if (this.prefersReducedMotion) { this[displayField] = target; return; }
+            const start = this[displayField] || 0;
+            const duration = 700;
+            const startTime = performance.now();
+            const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+            const step = (now) => {
+                const progress = Math.min((now - startTime) / duration, 1);
+                this[displayField] = Math.round(start + (target - start) * easeOutCubic(progress));
+                if (progress < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+        },
+
+        // ── Live agent pipeline ──────────────────────────
+        startPipeline(ticketId) {
+            if (this.pipelineTimers[ticketId]) return;
+            if (this.prefersReducedMotion) { this.pipelinePhases[ticketId] = 3; return; }
+            this.pipelinePhases[ticketId] = 0;
+            this.pipelineTimers[ticketId] = setInterval(() => {
+                this.pipelinePhases[ticketId] = ((this.pipelinePhases[ticketId] || 0) + 1) % this.pipelineSteps.length;
+            }, 900);
+        },
+
+        stopPipeline(ticketId) {
+            if (this.pipelineTimers[ticketId]) {
+                clearInterval(this.pipelineTimers[ticketId]);
+                delete this.pipelineTimers[ticketId];
+            }
+            delete this.pipelinePhases[ticketId];
+        },
+
+        pipelinePhaseOf(ticketId) {
+            return this.pipelinePhases[ticketId] ?? 0;
+        },
+
+        syncPipelines() {
+            this.tickets.forEach(t => {
+                if (t.status === 'open') this.startPipeline(t.id);
+                else this.stopPipeline(t.id);
+            });
+        },
+
+        // ── Status change flash ──────────────────────────
+        flashTicket(id, status) {
+            if (status !== 'resolved' && status !== 'escalated') return;
+            this.flashState = { id, status };
+            clearTimeout(this._flashTimer);
+            this._flashTimer = setTimeout(() => { this.flashState = null; }, 600);
+        },
+
+        flashClass(t) {
+            let cls = this.expandedTicket === t.id ? 'ring-2 ring-accent/20' : '';
+            if (this.flashState && this.flashState.id === t.id) {
+                cls += this.flashState.status === 'resolved'
+                    ? ' ring-2 ring-success/50 bg-success/5'
+                    : ' ring-2 ring-danger/50 bg-danger/5';
+            }
+            return cls;
+        },
+
+        // ── Toasts ───────────────────────────────────────
+        addToast(message, type = 'success') {
+            const id = ++this.toastId;
+            this.toasts.push({ id, message, type });
+            setTimeout(() => this.removeToast(id), 4000);
+        },
+
+        removeToast(id) {
+            this.toasts = this.toasts.filter(t => t.id !== id);
+        },
+
+        toggleTicket(id) {
+            this.expandedTicket = this.expandedTicket === id ? null : id;
+        },
+
+        statusClass(s) {
+            const classes = {
+                open: 'bg-warning/10 text-warning',
+                resolved: 'bg-success/10 text-success',
+                escalated: 'bg-danger/10 text-danger'
+            };
+            return classes[s] || 'bg-slate-100 text-slate-600';
+        },
+
+        priorityClass(p) {
+            const classes = {
+                high: 'bg-danger/10 text-danger',
+                medium: 'bg-warning/10 text-warning',
+                low: 'bg-success/10 text-success'
+            };
+            return classes[p] || 'bg-slate-100 text-slate-600';
+        },
+
+        renderMD(text) {
+            try { return DOMPurify.sanitize(marked.parse(text || '')); } catch(e) { return ''; }
         },
 
         connectSSE() {
             if (typeof EventSource === 'undefined') { this.startPolling(); return; }
-            const token = this.getToken();
-            const url = token ? '/api/v1/tickets/stream?token=' + encodeURIComponent(token) : '/api/v1/tickets/stream';
-            this.sse = new EventSource(url);
+            this.sse = new EventSource('/api/v1/tickets/stream');
             this.sse.addEventListener('tickets_updated', (e) => {
                 const data = JSON.parse(e.data);
                 this.updateTickets(data.tickets);
+                this.loading = false;
                 if (!this.sseConnected) this.sseConnected = true;
             });
             this.sse.addEventListener('ticket_updated', (e) => {
                 const ticket = JSON.parse(e.data);
-                this.updateTicket(ticket);
-                if (!this.sseConnected) this.sseConnected = true;
+                const idx = this.tickets.findIndex(t => t.id === ticket.id);
+                if (idx !== -1) { this.tickets[idx] = ticket; } else { this.tickets.unshift(ticket); }
+                this.updateStats();
+                this.flashTicket(ticket.id, ticket.status);
+                this.syncPipelines();
             });
             this.sse.onerror = () => {
                 this.sseConnected = false;
@@ -414,79 +506,80 @@ function app() {
 
         startPolling() {
             if (this.pollingTimer) return;
+            this.loading = false;
             this.pollingTimer = setInterval(async () => {
                 try {
-                    const res = await this.authFetch('/api/v1/tickets');
-                    const data = await res.json();
-                    if (data.tickets) this.updateTickets(data.tickets);
+                    const r = await fetch('/api/v1/tickets');
+                    this.updateTickets((await r.json()).tickets);
                 } catch(e) { console.warn('Polling error', e); }
             }, 5000);
         },
 
         updateTickets(tickets) {
             this.tickets = tickets;
-            this.stats.total = tickets.length;
-            this.stats.resolved = tickets.filter(t => t.status === 'resolved').length;
-            this.stats.escalated = tickets.filter(t => t.status === 'escalated').length;
+            this.updateStats();
+            this.syncPipelines();
         },
 
-        updateTicket(ticket) {
-            if (!ticket || !ticket.id) return;
-            const idx = this.tickets.findIndex(t => t.id === ticket.id);
-            if (idx !== -1) { this.tickets[idx] = ticket; } else { this.tickets.unshift(ticket); }
+        updateStats() {
             this.stats.total = this.tickets.length;
             this.stats.resolved = this.tickets.filter(t => t.status === 'resolved').length;
             this.stats.escalated = this.tickets.filter(t => t.status === 'escalated').length;
-        },
-
-        // ── UI helpers ────────────────────────────────────
-
-        statusClass(s) {
-            return { open: 'bg-amber-50 text-amber-700', resolved: 'bg-emerald-50 text-emerald-700', escalated: 'bg-red-50 text-red-700' }[s] || 'bg-slate-50 text-slate-600';
-        },
-
-        renderMD(text) {
-            try { return DOMPurify.sanitize(marked.parse(text || '')); } catch(e) { return ''; }
         },
 
         async createTicket() {
             if (!this.newTicketDesc.trim()) return;
             this.sending = true;
             try {
-                const res = await this.authFetch('/api/v1/tickets', {
+                const r = await fetch('/api/v1/tickets', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ description: this.newTicketDesc })
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({description: this.newTicketDesc})
                 });
-                const data = await res.json();
+                const data = await r.json();
+                if (!r.ok) {
+                    throw new Error(data.detail || 'Failed to create ticket (' + r.status + ')');
+                }
                 this.lastCreated = data.id;
                 this.newTicketDesc = '';
+                this.addToast('Ticket #' + data.id + ' created — AI agents are on it', 'success');
                 setTimeout(() => this.lastCreated = null, 3000);
-            } catch(e) { alert('Error: ' + e.message); }
+            } catch(e) { this.addToast('Error: ' + e.message, 'error'); }
             finally { this.sending = false; }
         },
 
         async ingestKB() {
             this.ingesting = true;
             try {
-                const res = await this.authFetch('/api/v1/knowledge-base/ingest', { method: 'POST' });
-                const data = await res.json();
-                this.kbResult = '✅ ' + data.documents_ingested + ' documents ingested';
-            } catch(e) { this.kbResult = '❌ Error: ' + e.message; }
+                const r = await fetch('/api/v1/knowledge-base/ingest', {method: 'POST'});
+                const data = await r.json();
+                if (!r.ok) {
+                    throw new Error(data.detail || 'Ingest failed (' + r.status + ')');
+                }
+                this.kbResult = data.documents_ingested + ' documents ingested';
+                this.addToast(data.documents_ingested + ' documents ingested into knowledge base', 'success');
+            } catch(e) {
+                this.kbResult = 'Error: ' + e.message;
+                this.addToast('Ingest failed: ' + e.message, 'error');
+            }
             finally { this.ingesting = false; }
         },
 
         async searchKB() {
             if (!this.searchQuery.trim()) return;
             try {
-                const res = await this.authFetch('/api/v1/documents/search?query=' + encodeURIComponent(this.searchQuery) + '&limit=3');
-                this.searchResults = (await res.json()).results || [];
-            } catch(e) { alert('Search error: ' + e.message); }
+                const r = await fetch('/api/v1/documents/search?query=' + encodeURIComponent(this.searchQuery) + '&limit=3');
+                const data = await r.json();
+                if (!r.ok) {
+                    throw new Error(data.detail || 'Search failed (' + r.status + ')');
+                }
+                this.searchResults = data.results || [];
+                if (!this.searchResults.length) this.addToast('No documents found for that query', 'info');
+            } catch(e) { this.addToast('Search error: ' + e.message, 'error'); }
         },
 
         openAdmin(id) {
-            const token = this.getToken();
-            window.location.href = '/admin' + (token ? '?token=' + encodeURIComponent(token) : '');
+            window.location.href = '/admin';
         }
     }
 }

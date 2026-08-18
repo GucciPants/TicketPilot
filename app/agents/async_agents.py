@@ -98,5 +98,10 @@ class AsyncQualityAgent(AsyncBaseAgent):
             "reason": qc.get("reason", "Quality check completed"),
             "confidence": qc.get("confidence", 0.0),
             "citation_score": qc.get("citation_score", 0.0),
+            "hallucination_warnings": qc.get("hallucination_warnings", []),
+            "critical_issues": qc.get("critical_issues", False),
+            "category": state.get("category"),
+            "priority": state.get("priority"),
+            "agent_notes": f"Auto-resolved by QualityAgent" if qc.get("passed") else f"Escalated by QualityAgent: {qc.get('reason', '')}",
         }
         return state
