@@ -49,11 +49,12 @@ class PersistenceAgent(AsyncBaseAgent):
 
             logger.info("Ticket %d persisted with status %s", ticket_id, status)
 
-            message["_sse_event"] = {
+            # Notify the SSE endpoint (GET /api/v1/tickets/stream) via Pub/Sub
+            await self.publish_event("ticket:events", {
                 "type": "ticket_updated",
                 "ticket_id": ticket_id,
-                "status": status
-            }
+                "status": status,
+            })
 
         except Exception as e:
             logger.error("Failed to persist ticket %d: %s", ticket_id, e)

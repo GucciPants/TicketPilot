@@ -65,6 +65,11 @@ class AsyncBaseAgent:
         r = await self._get_redis()
         await r.xadd(stream, {"data": json.dumps(data)}, maxlen=10000)
 
+    async def publish_event(self, channel: str, data: dict):
+        """Publish a JSON message to a Redis Pub/Sub channel (used for SSE)."""
+        r = await self._get_redis()
+        await r.publish(channel, json.dumps(data))
+
     async def run(self):
         """Main loop: consume from input stream, process, publish to output."""
         r = await self._get_redis()
