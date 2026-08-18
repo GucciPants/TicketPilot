@@ -140,3 +140,11 @@ class TestFrontend:
         response = client.get("/static/app.js")
         assert response.status_code == status.HTTP_200_OK
         assert "javascript" in response.headers["content-type"]
+
+    def test_dashboard_listens_for_live_ticket_updates(self, client):
+        """Dashboard must handle both the initial snapshot and live `ticket_updated` SSE events."""
+        response = client.get("/")
+        assert response.status_code == status.HTTP_200_OK
+        html = response.text
+        assert "tickets_updated" in html
+        assert "ticket_updated" in html

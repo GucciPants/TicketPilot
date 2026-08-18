@@ -400,6 +400,11 @@ function app() {
                 this.updateTickets(data.tickets);
                 if (!this.sseConnected) this.sseConnected = true;
             });
+            this.sse.addEventListener('ticket_updated', (e) => {
+                const ticket = JSON.parse(e.data);
+                this.updateTicket(ticket);
+                if (!this.sseConnected) this.sseConnected = true;
+            });
             this.sse.onerror = () => {
                 this.sseConnected = false;
                 this.sse.close();
@@ -423,6 +428,15 @@ function app() {
             this.stats.total = tickets.length;
             this.stats.resolved = tickets.filter(t => t.status === 'resolved').length;
             this.stats.escalated = tickets.filter(t => t.status === 'escalated').length;
+        },
+
+        updateTicket(ticket) {
+            if (!ticket || !ticket.id) return;
+            const idx = this.tickets.findIndex(t => t.id === ticket.id);
+            if (idx !== -1) { this.tickets[idx] = ticket; } else { this.tickets.unshift(ticket); }
+            this.stats.total = this.tickets.length;
+            this.stats.resolved = this.tickets.filter(t => t.status === 'resolved').length;
+            this.stats.escalated = this.tickets.filter(t => t.status === 'escalated').length;
         },
 
         // ── UI helpers ────────────────────────────────────
