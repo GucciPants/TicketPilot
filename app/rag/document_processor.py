@@ -178,7 +178,8 @@ class DocumentProcessor:
 
         Each gold resolution becomes a retrievable document (doc id `gs_<ticket_id>`)
         so RAG retrieval can surface known-good answers directly.
-        Returns the number of entries ingested (0 if the dataset is missing).
+        Returns the number of entries successfully stored in the vector store
+        (0 if the dataset is missing).
         """
         import json as _json
 
@@ -205,13 +206,18 @@ class DocumentProcessor:
                 if not text:
                     continue
                 doc_id = f"gs_{entry.get('ticket_id', 'unknown')}"
-                self.process_text(text, doc_id, {
+                metadata = {
                     "category": entry.get("category"),
                     "priority": entry.get("priority"),
                     "type": "gold_standard",
                     "source": "gold_dataset",
-                })
-                count += 1
+                }
+                chunks = self._chunk_text(text)
+                if all(
+                    self.vector_store.add_document(f"{doc_id}_chunk_{i}", chunk, metadata)
+                    for i, chunk in enumerate(chunks)
+                ):
+                    count += 1
 
         logger.info("Ingested %d gold-standard documents into vector store", count)
         return count

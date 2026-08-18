@@ -1,4 +1,6 @@
 """Tests for TicketPilot API endpoints."""
+from unittest.mock import patch
+
 import pytest
 from fastapi import status
 
@@ -98,8 +100,9 @@ class TestKnowledgeBase:
         assert data["status"] == "success"
         assert data["documents_ingested"] > 0
 
-    def test_ingest_reports_gold_documents(self, client, auth_headers):
-        response = client.post("/api/v1/knowledge-base/ingest", headers=auth_headers)
+    def test_ingest_reports_gold_documents(self, client, auth_headers, mock_qdrant):
+        with patch("app.rag.vector_store.get_embedding", return_value=[0.1] * 384):
+            response = client.post("/api/v1/knowledge-base/ingest", headers=auth_headers)
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["status"] == "success"
