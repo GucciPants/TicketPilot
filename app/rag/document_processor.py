@@ -1,6 +1,9 @@
 import os
+import logging
 from app.rag.vector_store import VectorStore
 from app.rag.embedding import get_embedding
+
+logger = logging.getLogger(__name__)
 
 class DocumentProcessor:
     def __init__(self):
@@ -169,3 +172,46 @@ class DocumentProcessor:
             self.process_text(doc["text"], doc["id"], doc["metadata"])
         
         return len(sample_docs)
+
+    def ingest_gold_standard_knowledge_base(self) -> int:
+        """Index gold-standard expected resolutions from the eval dataset.
+
+        Each gold resolution becomes a retrievable document (doc id `gs_<ticket_id>`)
+        so RAG retrieval can surface known-good answers directly.
+        Returns the number of entries ingested (0 if the dataset is missing).
+        """
+        import json as _json
+
+        dataset_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            "evaluation", "gold_dataset.jsonl"
+        )
+        if not os.path.exists(dataset_path):
+            logger.warning("Gold dataset not found at %s — skipping gold KB ingestion", dataset_path)
+            return 0
+
+        count = 0
+        with open(dataset_path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = _json.loads(line)
+                except ValueError:
+                    logger.warning("Skipping malformed gold dataset line")
+                    continue
+                text = entry.get("expected_resolution", "")
+                if not text:
+                    continue
+                doc_id = f"gs_{entry.get('ticket_id', 'unknown')}"
+                self.process_text(text, doc_id, {
+                    "category": entry.get("category"),
+                    "priority": entry.get("priority"),
+                    "type": "gold_standard",
+                    "source": "gold_dataset",
+                })
+                count += 1
+
+        logger.info("Ingested %d gold-standard documents into vector store", count)
+        return count

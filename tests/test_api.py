@@ -98,6 +98,13 @@ class TestKnowledgeBase:
         assert data["status"] == "success"
         assert data["documents_ingested"] > 0
 
+    def test_ingest_reports_gold_documents(self, client, auth_headers):
+        response = client.post("/api/v1/knowledge-base/ingest", headers=auth_headers)
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["status"] == "success"
+        assert data["gold_documents_ingested"] == 25
+
 
 class TestMetrics:
     """Metrics endpoint tests."""

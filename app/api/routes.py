@@ -275,10 +275,15 @@ async def ingest_document(
 async def ingest_knowledge_base(
     _user: User = Depends(require_role("agent", "admin")),
 ):
-    """Ingest the sample knowledge base. Agent/admin only."""
+    """Ingest the sample knowledge base plus gold-standard resolutions. Agent/admin only."""
     processor = DocumentProcessor()
-    count = processor.ingest_sample_knowledge_base()
-    return {"status": "success", "documents_ingested": count}
+    sample_count = processor.ingest_sample_knowledge_base()
+    gold_count = processor.ingest_gold_standard_knowledge_base()
+    return {
+        "status": "success",
+        "documents_ingested": sample_count + gold_count,
+        "gold_documents_ingested": gold_count,
+    }
 
 
 @router.get("/documents/search")
